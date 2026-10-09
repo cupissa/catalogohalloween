@@ -465,7 +465,7 @@
       <!-- VISTA 4: CONFIGURAR QR BRE-B -->
       <div id="tab-qr-config" class="hidden space-y-4">
         <h3 class="font-bold text-green-400">Subir Código QR BRE-B (Persistencia Base64)</h3>
-        <p class="text-xs text-gray-300">Selecciona o pega la imagen de tu código QR. Se guardará directamente en formato **Base64**.</p>
+        <p class="text-xs text-gray-300">Selecciona o pega la imagen de tu código QR. Se guardará en Supabase y localmente en formato **Base64**.</p>
         
         <div class="space-y-4 bg-gray-800/60 p-4 rounded-xl border border-gray-700">
           <div>
@@ -607,10 +607,12 @@
     async function cargarDatos() {
       try {
         if (_supabase) {
-          const { data: prodsData } = await _supabase.from('productos').select('*').order('id', { ascending: false });
+          const { data: prodsData, error: pErr } = await _supabase.from('productos').select('*').order('id', { ascending: false });
+          if (pErr) console.error("Error al obtener productos:", pErr);
           if (prodsData) productos = prodsData;
 
-          const { data: tData } = await _supabase.from('tarifas').select('*').order('id', { ascending: false });
+          const { data: tData, error: tErr } = await _supabase.from('tarifas').select('*').order('id', { ascending: false });
+          if (tErr) console.error("Error al obtener tarifas:", tErr);
           if (tData) tarifasDataRaw = tData;
 
           try {
@@ -1239,9 +1241,11 @@
         localStorage.setItem(KEY_QR, qrFinal);
 
         if (_supabase) {
-          await _supabase.from('configuracion').upsert([
+          const { error } = await _supabase.from('configuracion').upsert([
             { clave: 'qr_breb_url', valor: qrFinal }
           ], { onConflict: 'clave' });
+
+          if (error) throw error;
         }
 
         const imgModal = document.getElementById('img-qr-breb');
@@ -1249,9 +1253,10 @@
         if (imgModal) imgModal.src = qrFinal;
         if (imgPreview) imgPreview.src = qrFinal;
 
-        alert('¡Código QR guardado en formato Base64 con éxito!');
+        alert('¡Código QR guardado en Supabase con éxito!');
       } catch (err) {
-        alert('El QR se guardó en el almacenamiento local.');
+        console.error("Error al guardar QR:", err);
+        alert('El QR se guardó en almacenamiento local. Detalle Supabase: ' + (err.message || 'Error de políticas RLS'));
       } finally {
         if (btn) {
           btn.disabled = false;
@@ -1399,16 +1404,39 @@
         });
       }
 
+      // Preservar la referencia existente en edición o generar una nueva automática
+      const prodExistente = id ? productos.find(p => p.id == id) : null;
+      const ref = prodExistente?.ref || ('HW-' + Math.floor(1000 + Math.random() * 9000));
+
       const payload = {
-        ref: 'HW-' + Math.floor(1000 + Math.random() * 9000),
-        nombre, precio, categoria, subcategoria, publico, tematica, personaje, tallas, personalizable, img
+        ref,
+        nombre,
+        precio,
+        categoria,
+        subcategoria,
+        publico,
+        tematica,
+        personaje,
+        tallas,
+        personalizable,
+        img,
+        activo: true
       };
 
       if (_supabase) {
+        let error = null;
         if (id) {
-          await _supabase.from('productos').update(payload).eq('id', id);
+          const res = await _supabase.from('productos').update(payload).eq('id', id);
+          error = res.error;
         } else {
-          await _supabase.from('productos').insert([payload]);
+          const res = await _supabase.from('productos').insert([payload]);
+          error = res.error;
+        }
+
+        if (error) {
+          console.error("Error guardando producto en Supabase:", error);
+          alert("Error al guardar en Supabase: " + error.message + "\n\nRecuerda ejecutar la sentencia SQL para agregar las columnas faltantes (categoria, subcategoria) en la tabla productos.");
+          return;
         }
       } else {
         if (id) {
@@ -1420,12 +1448,14 @@
         }
       }
 
-      alert('Producto guardado correctamente en Base64');
+      alert('¡Producto guardado correctamente!');
       document.getElementById('form-producto').reset();
       document.getElementById('p-id').value = '';
       document.getElementById('p-img-url').value = '';
       document.getElementById('p-img-preview-container')?.classList.add('hidden');
-      cargarDatos();
+      document.getElementById('form-title').innerText = 'Cargar Nuevo Producto';
+      
+      await cargarDatos();
       cambiarTabAdmin('tab-inventario');
     }
 
