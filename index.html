@@ -130,24 +130,29 @@
 
     </div>
 
-    <!-- AVISO FABRICANTES -->
-    <div class="bg-gradient-to-r from-purple-950 via-black to-orange-950 border-t border-orange-500/20 py-1.5 px-4">
-      <div class="max-w-7xl mx-auto flex items-center justify-between gap-2 text-xs">
-        <div class="flex items-center gap-2 truncate">
-          <span class="text-orange-400 font-bold shrink-0">✂️ Fabricantes Directos:</span>
-          <span class="text-gray-300 truncate text-[11px] md:text-xs">¿No encuentras tu disfraz? ¡Te lo confeccionamos a medida!</span>
+    <!-- AVISO FABRICANTES (Optimizado para lectura fluida en móviles) -->
+    <div class="bg-gradient-to-r from-purple-950 via-black to-orange-950 border-t border-orange-500/20 py-2 px-3 sm:px-4">
+      <div class="max-w-7xl mx-auto flex flex-wrap items-center justify-between gap-2 text-xs">
+        <div class="flex items-center gap-1.5 flex-1 min-w-[200px]">
+          <span class="text-orange-400 font-bold shrink-0 text-[11px] sm:text-xs">✂️ Fabricantes Directos:</span>
+          <span class="text-gray-300 text-[11px] sm:text-xs leading-tight">¿No encuentras tu disfraz? ¡Te lo confeccionamos a medida!</span>
         </div>
         <a href="https://wa.me/573147671380?text=Hola%20Cupissa%20Halloween,%20quiero%20cotizar%20un%20disfraz%20personalizado." 
-           target="_blank" class="shrink-0 bg-green-600 hover:bg-green-500 text-white text-[10px] md:text-xs font-bold px-2.5 py-1 rounded-lg transition flex items-center gap-1 shadow">
-          <i class="fa-brands fa-whatsapp"></i> <span class="hidden sm:inline">Cotizar</span>
+           target="_blank" class="shrink-0 bg-green-600 hover:bg-green-500 text-white text-[10px] sm:text-xs font-bold px-2.5 py-1 rounded-lg transition flex items-center gap-1 shadow ml-auto">
+          <i class="fa-brands fa-whatsapp"></i> <span>Cotizar por WhatsApp</span>
         </a>
       </div>
     </div>
   </header>
 
-  <!-- Filtros Interconectados Dinámicos -->
+  <!-- Filtros Interconectados Dinámicos (Incluye Público "¿Para quién?") -->
   <section class="max-w-7xl mx-auto px-3 py-3 w-full">
-    <div class="grid grid-cols-2 md:grid-cols-4 gap-2">
+    <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-2">
+      <div>
+        <select id="filter-publico" onchange="actualizarFiltrosYRenderizar()" class="w-full bg-gray-900/90 border border-gray-700/80 rounded-xl p-2 text-xs text-gray-200 focus:border-orange-500 outline-none truncate">
+          <option value="">¿Para quién?: Todos</option>
+        </select>
+      </div>
       <div>
         <select id="filter-categoria" onchange="actualizarFiltrosYRenderizar()" class="w-full bg-gray-900/90 border border-gray-700/80 rounded-xl p-2 text-xs text-gray-200 focus:border-orange-500 outline-none truncate">
           <option value="">Categoría: Todas</option>
@@ -465,9 +470,16 @@
         </form>
       </div>
 
-      <!-- VISTA 3: INVENTARIO -->
+      <!-- VISTA 3: INVENTARIO (CON BUSCADOR INTEGRADO) -->
       <div id="tab-inventario" class="hidden space-y-4">
-        <h3 class="font-bold text-gray-300">Gestión de Inventario</h3>
+        <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2">
+          <h3 class="font-bold text-gray-300">Gestión de Inventario</h3>
+          <div class="relative w-full sm:w-72">
+            <input type="text" id="search-admin-inventario" oninput="renderAdminProductos()" placeholder="🔍 Buscar en inventario..." 
+                   class="w-full bg-gray-800 border border-gray-700 rounded-xl py-1.5 px-3 pl-8 text-xs text-white outline-none focus:border-orange-500">
+            <i class="fa-solid fa-magnifying-glass absolute left-2.5 top-2 text-gray-400 text-xs"></i>
+          </div>
+        </div>
         <div id="admin-lista-productos" class="space-y-2"></div>
       </div>
 
@@ -523,6 +535,7 @@
     let barrioSeleccionadoTexto = '';
     let tarifaEditandoId = null;
     let tempBase64QR = '';
+    let adminAutenticado = false;
 
     let paginaActual = 1;
     const limitePorPagina = 8;
@@ -534,6 +547,7 @@
       'mujer': ['mujeres', 'dama', 'damas', 'femenino', 'adulta'],
       'dama': ['mujer', 'damas', 'femenino', 'adulta'],
       'hombre': ['hombres', 'caballero', 'caballeros', 'masculino', 'adulto'],
+      'caballero': ['hombre', 'hombres', 'caballeros', 'masculino', 'adulto'],
       'niño': ['niños', 'infantil', 'niñito', 'pequeño'],
       'niña': ['niñas', 'infantil', 'niñita', 'pequeña'],
       'spiderman': ['hombre araña', 'spider-man', 'spider man', 'aracnido'],
@@ -554,7 +568,32 @@
       configurarDragAndDropYPaste();
       configurarScrollInfinito();
       configurarCierreSugerenciasExterno();
+      verificarRutaAdmin();
     });
+
+    // MANEJO DE RUTA Y PERSISTENCIA /ADMIN EN URL
+    function verificarRutaAdmin() {
+      const currentPath = window.location.pathname.toLowerCase();
+      const currentSearch = window.location.search.toLowerCase();
+
+      if (currentPath.includes('/admin') || currentSearch.includes('admin=1')) {
+        solicitarAccesoAdmin(true);
+      }
+
+      window.addEventListener('popstate', () => {
+        const path = window.location.pathname.toLowerCase();
+        const search = window.location.search.toLowerCase();
+        if (path.includes('/admin') || search.includes('admin=1')) {
+          if (adminAutenticado) {
+            document.getElementById('modal-admin')?.classList.remove('hidden');
+          } else {
+            solicitarAccesoAdmin(true);
+          }
+        } else {
+          document.getElementById('modal-admin')?.classList.add('hidden');
+        }
+      });
+    }
 
     function abrirModalFoto(imgUrl, nombre) {
       const modal = document.getElementById('modal-foto-zoom');
@@ -708,6 +747,7 @@
     }
 
     function poblarFiltrosInterconectados() {
+      const selPub = document.getElementById('filter-publico')?.value || '';
       const selCat = document.getElementById('filter-categoria')?.value || '';
       const selSub = document.getElementById('filter-subcategoria')?.value || '';
       const selTem = document.getElementById('filter-tematica')?.value || '';
@@ -715,6 +755,10 @@
 
       let prodsFilt = productos.filter(p => p.activo !== false);
 
+      const publicos = [...new Set(prodsFilt.map(p => p.publico).filter(Boolean))];
+      fillSelect('filter-publico', publicos, '¿Para quién?', selPub);
+
+      if (selPub) prodsFilt = prodsFilt.filter(p => p.publico === selPub);
       const categorias = [...new Set(prodsFilt.map(p => p.categoria).filter(Boolean))];
       fillSelect('filter-categoria', categorias, 'Categoría', selCat);
 
@@ -734,7 +778,7 @@
     function fillSelect(id, items, label, selectedValue = '') {
       const select = document.getElementById(id);
       if (select) {
-        select.innerHTML = `<option value="">${label}: Todas</option>` + 
+        select.innerHTML = `<option value="">${label}: Todos</option>` + 
           items.map(i => `<option value="${i}" ${i === selectedValue ? 'selected' : ''}>${i}</option>`).join('');
       }
     }
@@ -806,6 +850,7 @@
         coincidenciaInteligente(p.categoria, q) ||
         coincidenciaInteligente(p.subcategoria, q) ||
         coincidenciaInteligente(p.personaje, q) ||
+        coincidenciaInteligente(p.publico, q) ||
         coincidenciaInteligente(p.tematica, q)
       )).slice(0, 5);
 
@@ -815,13 +860,23 @@
             <img src="${p.img}" class="w-8 h-8 rounded-lg object-cover">
             <div class="text-xs truncate">
               <div class="font-bold text-orange-400 truncate">${p.nombre}</div>
-              <div class="text-[10px] text-gray-400 truncate">${p.categoria || ''} • ${p.subcategoria || ''} • ${p.personaje || ''}</div>
+              <div class="text-[10px] text-gray-400 truncate">${p.publico ? p.publico + ' • ' : ''}${p.categoria || ''} • ${p.subcategoria || ''}</div>
             </div>
           </div>
         `).join('');
         box.classList.remove('hidden');
       } else {
-        box.classList.add('hidden');
+        box.innerHTML = `
+          <div class="p-3 text-center space-y-2">
+            <p class="text-xs text-gray-300">No encontramos resultados para "<b>${busqueda}</b>".</p>
+            <p class="text-[11px] text-orange-400 font-bold">✂️ ¡Somos Fabricantes Directos!</p>
+            <a href="https://wa.me/573147671380?text=Hola%20Cupissa%20Halloween,%20busco%20un%20disfraz%20personalizado%20de:%20${encodeURIComponent(busqueda)}" 
+               target="_blank" class="inline-flex items-center justify-center gap-1.5 bg-green-600 hover:bg-green-500 text-white font-bold px-3 py-1.5 rounded-xl text-xs w-full transition shadow">
+              <i class="fa-brands fa-whatsapp"></i> Cotizar "${busqueda}" personalizado
+            </a>
+          </div>
+        `;
+        box.classList.remove('hidden');
       }
     }
 
@@ -846,6 +901,7 @@
 
     function filtrarProductos() {
       const search = (document.getElementById('input-search')?.value || '').trim();
+      const pub = document.getElementById('filter-publico')?.value || '';
       const cat = document.getElementById('filter-categoria')?.value || '';
       const sub = document.getElementById('filter-subcategoria')?.value || '';
       const tem = document.getElementById('filter-tematica')?.value || '';
@@ -859,15 +915,17 @@
           coincidenciaInteligente(p.ref, search) ||
           coincidenciaInteligente(p.categoria, search) ||
           coincidenciaInteligente(p.subcategoria, search) ||
+          coincidenciaInteligente(p.publico, search) ||
           coincidenciaInteligente(p.tematica, search) ||
           coincidenciaInteligente(p.personaje, search);
 
+        const matchPub = !pub || p.publico === pub;
         const matchCat = !cat || p.categoria === cat;
         const matchSub = !sub || p.subcategoria === sub;
         const matchTem = !tem || p.tematica === tem;
         const matchPer = !per || p.personaje === per;
 
-        return matchSearch && matchCat && matchSub && matchTem && matchPer;
+        return matchSearch && matchPub && matchCat && matchSub && matchTem && matchPer;
       });
 
       paginaActual = 1;
@@ -927,7 +985,7 @@
           <div class="p-2.5 sm:p-4 flex-1 flex flex-col justify-between space-y-2">
             <div>
               <h3 class="font-bold text-sm sm:text-base text-orange-400 line-clamp-1">${p.nombre}</h3>
-              <p class="text-[10px] sm:text-xs text-gray-400 truncate">${p.categoria || ''} • ${p.subcategoria || ''} • ${p.personaje || ''}</p>
+              <p class="text-[10px] sm:text-xs text-gray-400 truncate">${p.publico ? p.publico + ' • ' : ''}${p.categoria || ''} • ${p.subcategoria || ''}</p>
             </div>
 
             ${p.tallas && p.tallas.length > 0 ? `
@@ -1313,36 +1371,56 @@
       }
     }
 
-    async function solicitarAccesoAdmin() {
-      const pass = prompt('Ingresa la contraseña de administración:');
-      if (!pass) return;
-
-      if (!_supabase) {
-        if (pass === 'admin123') {
-          document.getElementById('modal-admin')?.classList.remove('hidden');
-        } else {
-          alert('Contraseña incorrecta');
+    async function solicitarAccesoAdmin(directo = false) {
+      if (adminAutenticado) {
+        document.getElementById('modal-admin')?.classList.remove('hidden');
+        if (window.location.pathname !== '/admin') {
+          window.history.pushState({ admin: true }, '', '/admin');
         }
         return;
       }
 
-      try {
-        const { data } = await _supabase.from('configuracion').select('valor').eq('clave', 'admin_password').single();
-        if ((data && data.valor === pass) || pass === 'admin123') {
-          document.getElementById('modal-admin')?.classList.remove('hidden');
-        } else {
-          alert('Contraseña incorrecta');
+      const pass = prompt('Ingresa la contraseña de administración:');
+      if (!pass) {
+        if (directo) {
+          window.history.replaceState({}, '', '/');
         }
-      } catch (e) {
-        if (pass === 'admin123') {
-          document.getElementById('modal-admin')?.classList.remove('hidden');
-        } else {
-          alert('Error verificando contraseña');
+        return;
+      }
+
+      let exito = false;
+
+      if (!_supabase) {
+        if (pass === 'admin123') exito = true;
+      } else {
+        try {
+          const { data } = await _supabase.from('configuracion').select('valor').eq('clave', 'admin_password').single();
+          if ((data && data.valor === pass) || pass === 'admin123') exito = true;
+        } catch (e) {
+          if (pass === 'admin123') exito = true;
+        }
+      }
+
+      if (exito) {
+        adminAutenticado = true;
+        document.getElementById('modal-admin')?.classList.remove('hidden');
+        if (window.location.pathname !== '/admin') {
+          window.history.pushState({ admin: true }, '', '/admin');
+        }
+      } else {
+        alert('Contraseña incorrecta');
+        if (directo) {
+          window.history.replaceState({}, '', '/');
         }
       }
     }
 
-    function cerrarAdminPanel() { document.getElementById('modal-admin')?.classList.add('hidden'); }
+    function cerrarAdminPanel() { 
+      document.getElementById('modal-admin')?.classList.add('hidden'); 
+      if (window.location.pathname === '/admin') {
+        window.history.pushState({}, '', '/');
+      }
+    }
 
     function cambiarTabAdmin(tabId) {
       ['tab-domicilios', 'tab-cargar', 'tab-inventario', 'tab-qr-config'].forEach(t => document.getElementById(t)?.classList.add('hidden'));
@@ -1558,16 +1636,34 @@
       const list = document.getElementById('admin-lista-productos');
       if (!list) return;
 
-      list.innerHTML = productos.map(p => `
+      const q = (document.getElementById('search-admin-inventario')?.value || '').toLowerCase().trim();
+
+      const productosFiltrados = productos.filter(p => {
+        if (!q) return true;
+        return (p.nombre || '').toLowerCase().includes(q) ||
+               (p.ref || '').toLowerCase().includes(q) ||
+               (p.categoria || '').toLowerCase().includes(q) ||
+               (p.subcategoria || '').toLowerCase().includes(q) ||
+               (p.publico || '').toLowerCase().includes(q) ||
+               (p.tematica || '').toLowerCase().includes(q) ||
+               (p.personaje || '').toLowerCase().includes(q);
+      });
+
+      if (productosFiltrados.length === 0) {
+        list.innerHTML = `<p class="text-center text-gray-500 py-6 text-xs">No se encontraron productos en el inventario.</p>`;
+        return;
+      }
+
+      list.innerHTML = productosFiltrados.map(p => `
         <div class="flex items-center justify-between bg-gray-800/80 p-3 rounded-xl text-xs border border-gray-700">
-          <div class="flex items-center gap-3">
-            <img src="${p.img || 'https://via.placeholder.com/50'}" class="w-10 h-10 object-cover rounded">
-            <div>
+          <div class="flex items-center gap-3 truncate pr-2">
+            <img src="${p.img || 'https://via.placeholder.com/50'}" class="w-10 h-10 object-cover rounded shrink-0">
+            <div class="truncate">
               <span class="font-bold text-orange-400">${p.nombre}</span> (${p.ref || 'HW'}) - $${Number(p.precio).toLocaleString('es-CO')}
-              <div class="text-[10px] text-gray-400">${p.categoria || 'Cat'} > ${p.subcategoria || 'Sub'}</div>
+              <div class="text-[10px] text-gray-400 truncate">${p.publico ? p.publico + ' | ' : ''}${p.categoria || 'Cat'} > ${p.subcategoria || 'Sub'}</div>
             </div>
           </div>
-          <div class="flex gap-2">
+          <div class="flex gap-2 shrink-0">
             <button onclick="editarProducto(${p.id})" class="bg-blue-600 hover:bg-blue-500 px-2 py-1 rounded text-white cursor-pointer"><i class="fa-solid fa-pen"></i> Editar</button>
             <button onclick="toggleEstadoProducto(${p.id}, ${p.activo !== false})" class="px-2 py-1 rounded text-white cursor-pointer ${p.activo !== false ? 'bg-green-600' : 'bg-red-600'}">
               ${p.activo !== false ? 'Visible' : 'Oculto'}
