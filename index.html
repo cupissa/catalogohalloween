@@ -1,0 +1,1586 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Cupissa Halloween</title>
+  
+  <!-- Favicon Emoji Calabaza -->
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🎃</text></svg>">
+
+  <!-- Tailwind CSS & FontAwesome -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  
+  <!-- Supabase JS Client -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  
+  <!-- Cropper.js -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.css"/>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.js"></script>
+
+  <style>
+    body {
+      background: radial-gradient(circle at 80% 15%, #2a1b4e 0%, #0d0818 60%, #05020a 100%);
+      background-attachment: fixed;
+      padding-bottom: 70px;
+    }
+    @media (min-width: 768px) {
+      body {
+        padding-bottom: 0px;
+      }
+    }
+    @keyframes witch-fly {
+      0% { transform: translate(-100px, 20px) scale(0.8); opacity: 0; }
+      50% { opacity: 0.8; }
+      100% { transform: translate(calc(100vw + 100px), -40px) scale(1.1); opacity: 0; }
+    }
+    .animate-witch { animation: witch-fly 18s linear infinite; }
+    @keyframes bat-flap {
+      0%, 100% { transform: rotate(0deg) scale(1); }
+      50% { transform: rotate(-10deg) scale(1.1); }
+    }
+    .animate-bat { animation: bat-flap 2s ease-in-out infinite; }
+    .card-halloween { background-color: rgba(22, 15, 38, 0.95); border: 1px solid rgba(168, 85, 247, 0.3); backdrop-filter: blur(12px); }
+    
+    ::-webkit-scrollbar { width: 6px; }
+    ::-webkit-scrollbar-track { background: #0d0818; }
+    ::-webkit-scrollbar-thumb { background: #a855f7; border-radius: 4px; }
+  </style>
+</head>
+<body class="text-gray-200 font-sans min-h-screen flex flex-col justify-between relative overflow-x-hidden">
+
+  <!-- Elementos Ambientales Halloween -->
+  <div class="fixed top-6 right-10 w-28 h-28 bg-amber-100/20 rounded-full blur-xl pointer-events-none"></div>
+  <div class="fixed top-8 right-12 w-24 h-24 bg-gradient-to-br from-amber-100 to-amber-200 rounded-full shadow-[0_0_50px_rgba(251,191,36,0.4)] pointer-events-none z-0"></div>
+  <div class="fixed top-20 left-0 text-4xl text-purple-900/40 pointer-events-none z-0 animate-witch">🧹 🎃</div>
+
+  <!-- MODAL UBICACIÓN INICIAL OBLIGATORIO E INAMOVIBLE -->
+  <div id="modal-ubicacion" class="fixed inset-0 bg-black/95 z-[99999] flex items-center justify-center p-4 backdrop-blur-md">
+    <div class="card-halloween p-6 rounded-2xl max-w-md w-full border-2 border-orange-500 text-center shadow-2xl relative z-10">
+      <i class="fa-solid fa-ghost text-5xl text-orange-500 mb-4 animate-bounce"></i>
+      <h2 class="text-2xl font-bold text-orange-400 mb-2">¡Bienvenido a Cupissa Halloween! 🎃</h2>
+      <p class="text-sm text-gray-300 mb-6">Para calcular la tarifa de domicilio exacta o cotizar tu envío, por favor selecciona tu ubicación:</p>
+      
+      <div class="space-y-3">
+        <button type="button" onclick="seleccionarUbicacion('local')" class="w-full py-3.5 bg-orange-600 hover:bg-orange-500 text-white font-bold rounded-xl transition cursor-pointer shadow-lg active:scale-95 text-sm flex items-center justify-center gap-2">
+          <span>📍</span> Barranquilla o Zona Metropolitana
+        </button>
+        <button type="button" onclick="seleccionarUbicacion('nacional')" class="w-full py-3.5 bg-purple-700 hover:bg-purple-600 text-white font-bold rounded-xl transition cursor-pointer shadow-lg active:scale-95 text-sm flex items-center justify-center gap-2">
+          <span>🇨🇴</span> Resto de Colombia (Envíos Nacionales)
+        </button>
+      </div>
+      <p class="text-[11px] text-gray-400 mt-4">* Barranquilla, Soledad, Puerto Colombia, Galapa y Malambo aplican tarifa local con opción de domicilio y anticipo.</p>
+    </div>
+  </div>
+
+  <!-- Header Fijo -->
+  <header class="bg-black/90 backdrop-blur border-b border-orange-500/30 sticky top-0 z-40 shadow-lg">
+    
+    <!-- Barra Superior de Ubicación -->
+    <div class="bg-purple-950/80 border-b border-purple-800/40 py-1 px-4 text-[11px] text-purple-200 flex justify-between items-center">
+      <div id="indicador-ubicacion-header" class="flex items-center gap-1.5 font-semibold">
+        <i class="fa-solid fa-location-dot text-orange-400"></i>
+        <span id="texto-ubicacion-actual">Ubicación no seleccionada</span>
+      </div>
+      <button onclick="reabrirModalUbicacion()" class="text-orange-400 hover:text-orange-300 underline font-bold cursor-pointer">
+        [Cambiar Ubicación]
+      </button>
+    </div>
+
+    <div class="max-w-7xl mx-auto px-4 py-2.5 flex flex-col md:flex-row gap-3 justify-between items-center">
+      
+      <!-- LOGO -->
+      <div class="flex items-center gap-2">
+        <i class="fa-solid fa-bat text-2xl text-orange-500 animate-bat"></i>
+        <h1 class="text-xl font-black tracking-wider text-orange-500">
+          CUPISSA <span class="text-purple-400">HALLOWEEN</span>
+        </h1>
+      </div>
+      
+      <!-- BUSCADOR INTELIGENTE -->
+      <div class="w-full md:w-1/2 relative">
+        <div class="relative flex items-center">
+          <input type="text" id="input-search" oninput="manejarInputBusqueda(this.value)" placeholder="Buscar categoría, personaje, disfraz, dama, niños..." 
+                 class="w-full bg-gray-900/90 border border-purple-500/50 rounded-full py-2 pl-10 pr-10 text-sm focus:outline-none focus:border-orange-500 text-white placeholder-gray-400 shadow-inner">
+          <i class="fa-solid fa-magnifying-glass absolute left-3.5 text-purple-400"></i>
+          <button id="btn-clear-search" onclick="limpiarBusqueda()" class="hidden absolute right-3 text-gray-400 hover:text-white">
+            <i class="fa-solid fa-xmark text-sm"></i>
+          </button>
+        </div>
+
+        <div id="suggestions-box" class="hidden absolute top-full left-0 right-0 bg-gray-900/95 border border-purple-500/50 rounded-2xl mt-1 p-2 shadow-2xl z-50 backdrop-blur max-h-60 overflow-y-auto"></div>
+      </div>
+
+      <!-- BOTÓN CARRITO DESKTOP -->
+      <button onclick="toggleCarrito(true)" class="hidden md:flex relative bg-orange-600 hover:bg-orange-500 px-4 py-2 rounded-full font-bold items-center gap-2 cursor-pointer transition shadow-lg shrink-0">
+        <i class="fa-solid fa-cart-shopping"></i>
+        <span>Carrito</span>
+        <span id="cart-count-desktop" class="bg-purple-900 text-white text-xs px-2 py-0.5 rounded-full">0</span>
+      </button>
+
+    </div>
+
+    <!-- AVISO FABRICANTES -->
+    <div class="bg-gradient-to-r from-purple-950 via-black to-orange-950 border-t border-orange-500/20 py-1.5 px-4">
+      <div class="max-w-7xl mx-auto flex items-center justify-between gap-2 text-xs">
+        <div class="flex items-center gap-2 truncate">
+          <span class="text-orange-400 font-bold shrink-0">✂️ Fabricantes Directos:</span>
+          <span class="text-gray-300 truncate text-[11px] md:text-xs">¿No encuentras tu disfraz? ¡Te lo confeccionamos a medida!</span>
+        </div>
+        <a href="https://wa.me/573147671380?text=Hola%20Cupissa%20Halloween,%20quiero%20cotizar%20un%20disfraz%20personalizado." 
+           target="_blank" class="shrink-0 bg-green-600 hover:bg-green-500 text-white text-[10px] md:text-xs font-bold px-2.5 py-1 rounded-lg transition flex items-center gap-1 shadow">
+          <i class="fa-brands fa-whatsapp"></i> <span class="hidden sm:inline">Cotizar</span>
+        </a>
+      </div>
+    </div>
+  </header>
+
+  <!-- Filtros Interconectados Dinámicos -->
+  <section class="max-w-7xl mx-auto px-3 py-3 w-full">
+    <div class="grid grid-cols-2 md:grid-cols-4 gap-2">
+      <div>
+        <select id="filter-categoria" onchange="actualizarFiltrosYRenderizar()" class="w-full bg-gray-900/90 border border-gray-700/80 rounded-xl p-2 text-xs text-gray-200 focus:border-orange-500 outline-none truncate">
+          <option value="">Categoría: Todas</option>
+        </select>
+      </div>
+      <div>
+        <select id="filter-subcategoria" onchange="actualizarFiltrosYRenderizar()" class="w-full bg-gray-900/90 border border-gray-700/80 rounded-xl p-2 text-xs text-gray-200 focus:border-orange-500 outline-none truncate">
+          <option value="">Subcategoría: Todas</option>
+        </select>
+      </div>
+      <div>
+        <select id="filter-tematica" onchange="actualizarFiltrosYRenderizar()" class="w-full bg-gray-900/90 border border-gray-700/80 rounded-xl p-2 text-xs text-gray-200 focus:border-orange-500 outline-none truncate">
+          <option value="">Temática: Todas</option>
+        </select>
+      </div>
+      <div>
+        <select id="filter-personaje" onchange="actualizarFiltrosYRenderizar()" class="w-full bg-gray-900/90 border border-gray-700/80 rounded-xl p-2 text-xs text-gray-200 focus:border-orange-500 outline-none truncate">
+          <option value="">Personaje: Todos</option>
+        </select>
+      </div>
+    </div>
+  </section>
+
+  <!-- Grid de Productos -->
+  <main class="max-w-7xl mx-auto px-3 py-2 flex-1 w-full">
+    <div id="search-feedback" class="hidden mb-4 p-3 bg-purple-950/40 border border-purple-500/30 rounded-xl text-center text-xs text-purple-200"></div>
+    <div id="grid-productos" class="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 md:gap-6"></div>
+    
+    <div id="scroll-loader" class="hidden py-8 text-center text-orange-400">
+      <i class="fa-solid fa-spinner fa-spin text-2xl"></i>
+      <p class="text-xs text-gray-400 mt-2">Cargando más disfraces...</p>
+    </div>
+  </main>
+
+  <!-- BARRA DE NAVEGACIÓN INFERIOR MÓVIL -->
+  <nav class="md:hidden fixed bottom-0 left-0 right-0 bg-black/95 border-t border-purple-900/60 z-40 backdrop-blur px-4 py-2 flex justify-around items-center">
+    <button onclick="window.scrollTo({top: 0, behavior: 'smooth'})" class="flex flex-col items-center text-gray-400 hover:text-orange-400">
+      <i class="fa-solid fa-house text-lg"></i>
+      <span class="text-[10px] mt-0.5">Inicio</span>
+    </button>
+    <button onclick="focarBuscador()" class="flex flex-col items-center text-gray-400 hover:text-orange-400">
+      <i class="fa-solid fa-magnifying-glass text-lg"></i>
+      <span class="text-[10px] mt-0.5">Buscar</span>
+    </button>
+    <a href="https://wa.me/573147671380?text=Hola%20Cupissa%20Halloween,%20deseo%20asesoría." target="_blank" class="flex flex-col items-center text-green-500">
+      <i class="fa-brands fa-whatsapp text-xl"></i>
+      <span class="text-[10px] mt-0.5">Asesor</span>
+    </a>
+    <button onclick="toggleCarrito(true)" class="flex flex-col items-center text-gray-400 hover:text-orange-400 relative">
+      <i class="fa-solid fa-cart-shopping text-lg"></i>
+      <span class="text-[10px] mt-0.5">Carrito</span>
+      <span id="cart-count-mobile" class="absolute -top-1 -right-2 bg-orange-600 text-white text-[10px] font-bold px-1.5 py-0.2 rounded-full">0</span>
+    </button>
+  </nav>
+
+  <!-- Footer -->
+  <footer class="bg-black/90 border-t border-purple-900/50 pt-8 pb-12 mt-12 relative z-10">
+    <div class="max-w-7xl mx-auto px-4 space-y-8">
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-6 text-center md:text-left">
+        <div class="p-4 rounded-xl bg-orange-950/20 border border-orange-500/20">
+          <h4 class="text-orange-400 font-bold mb-1 text-sm"><i class="fa-solid fa-truck-fast mr-2"></i>Domicilios Locales</h4>
+          <p class="text-xs text-gray-400">Barranquilla, Soledad, Puerto Colombia, Galapa y Malambo.</p>
+        </div>
+        <div class="p-4 rounded-xl bg-purple-950/20 border border-purple-500/20">
+          <h4 class="text-purple-400 font-bold mb-1 text-sm"><i class="fa-solid fa-plane mr-2"></i>Envíos Nacionales</h4>
+          <p class="text-xs text-gray-400">Despachos a todos los departamentos de Colombia.</p>
+        </div>
+      </div>
+
+      <div class="text-center space-y-3">
+        <p class="text-[10px] text-gray-400 uppercase tracking-widest font-semibold">Medios de Pago Aceptados</p>
+        <div class="flex flex-wrap justify-center items-center gap-4 text-xl text-gray-300">
+          <i class="fa-brands fa-cc-visa text-blue-400"></i>
+          <i class="fa-brands fa-cc-mastercard text-red-500"></i>
+          <span class="font-black text-[10px] bg-pink-600 text-white px-2 py-0.5 rounded">NEQUI</span>
+          <span class="font-black text-[10px] bg-green-500 text-black px-2 py-0.5 rounded">BRE-B</span>
+          <span class="font-black text-[10px] bg-purple-600 text-white px-2 py-0.5 rounded">WOMPI</span>
+          <span class="font-black text-[10px] bg-blue-500 text-white px-2 py-0.5 rounded">ADDI</span>
+          <i class="fa-solid fa-money-bill-wave text-green-400"></i>
+          <i class="fa-solid fa-building-columns text-yellow-400"></i>
+        </div>
+      </div>
+
+      <div class="text-center text-xs text-gray-600 pt-4 border-t border-gray-900">
+        © 2026 Cupissa Halloween. Todos los derechos reservados. 
+        <span onclick="solicitarAccesoAdmin()" class="cursor-pointer text-gray-800 hover:text-orange-500 transition select-none" title="Admin Panel">.</span>
+      </div>
+    </div>
+  </footer>
+
+  <!-- DRAWER CARRITO - ESTRUCTURA FIJA CON BOTONES GARANTIZADOS -->
+  <div id="modal-carrito" class="fixed inset-0 bg-black/80 z-[10000] hidden flex justify-end">
+    <div class="bg-gray-900 w-full max-w-md h-full p-4 sm:p-5 flex flex-col justify-between overflow-hidden shadow-2xl border-l border-purple-500/30">
+      
+      <!-- CABECERA CARRITO -->
+      <div class="flex justify-between items-center pb-3 border-b border-gray-800 shrink-0">
+        <h3 class="text-lg font-bold text-orange-500 flex items-center gap-2">
+          <i class="fa-solid fa-cart-shopping"></i> Tu Carrito 🎃
+        </h3>
+        <button type="button" onclick="toggleCarrito(false)" class="text-gray-400 hover:text-white p-2 cursor-pointer">
+          <i class="fa-solid fa-xmark text-xl"></i>
+        </button>
+      </div>
+
+      <!-- LISTA DE PRODUCTOS SCROLLABLE -->
+      <div id="cart-items" class="flex-1 overflow-y-auto my-3 space-y-3 pr-1"></div>
+
+      <!-- SECCIÓN DE DETALLES Y CHECKOUT FIJA EN LA PARTE INFERIOR -->
+      <div class="border-t border-gray-800 pt-3 space-y-3 shrink-0 bg-gray-900">
+        
+        <!-- Selector de Domicilio -->
+        <div id="seccion-envio-cart" class="text-xs"></div>
+
+        <!-- Resumen Financiero -->
+        <div class="space-y-1 bg-gray-800/80 p-3 rounded-xl border border-gray-700/60 text-xs">
+          <div class="flex justify-between text-gray-300">
+            <span>Subtotal Productos:</span>
+            <span id="cart-subtotal" class="font-semibold text-white">$0</span>
+          </div>
+          <div class="flex justify-between text-gray-300">
+            <span>Domicilio / Envío:</span>
+            <span id="cart-domicilio-val" class="font-semibold text-white">$0</span>
+          </div>
+          <div class="flex justify-between text-sm font-bold text-orange-400 pt-1 border-t border-gray-700">
+            <span>Total A Pagar:</span>
+            <span id="cart-total">$0</span>
+          </div>
+          <div id="linea-anticipo" class="flex justify-between text-xs font-semibold text-green-400 pt-1 border-t border-gray-700/50">
+            <span>Anticipo del 20%:</span>
+            <span id="cart-anticipo">$0</span>
+          </div>
+        </div>
+
+        <!-- Datos del Cliente -->
+        <div class="space-y-2">
+          <input type="text" id="cliente-nombre" placeholder="Tu Nombre Completo *" class="w-full bg-gray-800 border border-gray-700 rounded-xl p-2.5 text-xs text-white outline-none focus:border-orange-500">
+          <input type="tel" id="cliente-telefono" placeholder="Número de WhatsApp *" class="w-full bg-gray-800 border border-gray-700 rounded-xl p-2.5 text-xs text-white outline-none focus:border-orange-500">
+          <div>
+            <label class="text-[10px] text-gray-400 block mb-1">Medio de Pago preferido:</label>
+            <select id="cliente-metodo-pago" class="w-full bg-gray-800 border border-gray-700 rounded-xl p-2 text-xs text-white outline-none">
+              <option value="BRE-B">BRE-B (Código QR Instantáneo)</option>
+              <option value="Nequi">Nequi</option>
+              <option value="Wompi">Wompi / Tarjetas Crédito-Débito</option>
+              <option value="Addi">Addi (Crédito)</option>
+              <option value="Efectivo / Transferencia">Efectivo / Bancolombia</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- BOTONES INAMOVIBLES HARDCODED -->
+        <div id="opciones-checkout" class="space-y-2 pt-1">
+          <button type="button" onclick="procesarAnticipoBreb()" class="w-full bg-gradient-to-r from-purple-700 to-purple-600 hover:from-purple-600 hover:to-purple-500 text-white font-bold py-3 rounded-xl text-xs transition cursor-pointer shadow-lg active:scale-95 flex items-center justify-center gap-2">
+            <i class="fa-solid fa-qrcode text-base"></i> Pagar 20% Anticipo con BRE-B
+          </button>
+          <button type="button" onclick="enviarWhatsApp('directo')" class="w-full bg-green-600 hover:bg-green-500 text-white font-bold py-3 rounded-xl text-xs transition cursor-pointer shadow-lg active:scale-95 flex items-center justify-center gap-2">
+            <i class="fa-brands fa-whatsapp text-base"></i> Agendar Pedido por WhatsApp
+          </button>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal QR BRE-B -->
+  <div id="modal-qr-breb" class="fixed inset-0 bg-black/90 z-[20000] hidden flex items-center justify-center p-4">
+    <div class="card-halloween p-6 rounded-2xl max-w-sm w-full border border-green-500 text-center space-y-4 shadow-2xl">
+      <div class="flex justify-between items-center border-b border-gray-800 pb-2">
+        <h3 class="text-base font-bold text-green-400 flex items-center gap-2">
+          <i class="fa-solid fa-qrcode"></i> Anticipo del 20% con BRE-B
+        </h3>
+        <button onclick="cerrarModalQr()" class="text-gray-400 hover:text-white"><i class="fa-solid fa-xmark"></i></button>
+      </div>
+
+      <div class="bg-gray-800/80 p-2.5 rounded-xl text-left text-xs space-y-1">
+        <div class="flex justify-between text-gray-300"><span>Total Pedido:</span><b id="qr-modal-total">$0</b></div>
+        <div class="flex justify-between text-green-400 font-bold"><span>Valor 20% Anticipo:</span><b id="qr-modal-anticipo">$0</b></div>
+      </div>
+
+      <p class="text-xs text-gray-300">Escanea este código QR BRE-B desde tu app bancaria para abonar el 20%. <b>Guarda el comprobante de pago</b>.</p>
+      
+      <div class="bg-white p-3 rounded-2xl inline-block shadow-lg max-w-[220px] mx-auto">
+        <img id="img-qr-breb" src="" alt="QR BRE-B Cupissa" class="w-48 h-48 mx-auto object-contain">
+      </div>
+
+      <button onclick="confirmarAnticipoYEnviarWA()" class="w-full bg-green-600 hover:bg-green-500 text-white font-bold py-3 rounded-xl transition text-xs cursor-pointer shadow-lg active:scale-95 flex items-center justify-center gap-2">
+        <i class="fa-brands fa-whatsapp text-base"></i> Enviar Comprobante por WhatsApp
+      </button>
+    </div>
+  </div>
+
+  <!-- DATALISTS PARA GUARDAR Y REUTILIZAR CATEGORÍAS EN EL ADMIN -->
+  <datalist id="dl-categorias"></datalist>
+  <datalist id="dl-subcategorias"></datalist>
+  <datalist id="dl-tematicas"></datalist>
+  <datalist id="dl-personajes"></datalist>
+  <datalist id="dl-publicos"></datalist>
+
+  <!-- Modal Admin Panel -->
+  <div id="modal-admin" class="fixed inset-0 bg-black/95 z-[15000] hidden p-4 overflow-y-auto">
+    <div class="max-w-5xl mx-auto bg-gray-900 border border-orange-500/50 rounded-2xl p-6 my-8 space-y-6">
+      <div class="flex justify-between items-center border-b border-gray-800 pb-4">
+        <h2 class="text-2xl font-bold text-orange-500">Panel de Administración</h2>
+        <button onclick="cerrarAdminPanel()" class="text-gray-400 hover:text-white cursor-pointer"><i class="fa-solid fa-xmark text-2xl"></i></button>
+      </div>
+
+      <div class="flex border-b border-gray-800 gap-4 overflow-x-auto">
+        <button onclick="cambiarTabAdmin('tab-domicilios')" id="btn-tab-domicilios" class="py-2 px-4 font-bold border-b-2 border-orange-500 text-orange-400 text-sm whitespace-nowrap">1. Domicilios</button>
+        <button onclick="cambiarTabAdmin('tab-cargar')" id="btn-tab-cargar" class="py-2 px-4 font-bold border-b-2 border-transparent text-gray-400 hover:text-white text-sm whitespace-nowrap">2. Cargar Producto</button>
+        <button onclick="cambiarTabAdmin('tab-inventario')" id="btn-tab-inventario" class="py-2 px-4 font-bold border-b-2 border-transparent text-gray-400 hover:text-white text-sm whitespace-nowrap">3. Inventario y Edición</button>
+        <button onclick="cambiarTabAdmin('tab-qr-config')" id="btn-tab-qr-config" class="py-2 px-4 font-bold border-b-2 border-transparent text-gray-400 hover:text-white text-sm whitespace-nowrap">4. Configurar QR BRE-B</button>
+      </div>
+
+      <!-- VISTA 1: DOMICILIOS CON BUSCADOR EN ADMIN -->
+      <div id="tab-domicilios" class="space-y-4">
+        <h3 class="font-bold text-purple-400">Tarifas de Domicilio por Ciudad/Municipio y Barrio</h3>
+        
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-2 bg-gray-800/60 p-3 rounded-xl border border-gray-700">
+          <select id="admin-municipio" class="bg-gray-800 border border-gray-700 rounded p-2 text-sm text-white outline-none">
+            <option value="Barranquilla">Barranquilla</option>
+            <option value="Soledad">Soledad</option>
+            <option value="Puerto Colombia">Puerto Colombia</option>
+            <option value="Galapa">Galapa</option>
+            <option value="Malambo">Malambo</option>
+          </select>
+          <input type="text" id="admin-barrio" placeholder="Barrio (ej: Alto Prado, El Hipódromo)" class="bg-gray-800 border border-gray-700 rounded p-2 text-sm text-white outline-none">
+          <input type="number" id="admin-tarifa" placeholder="Tarifa ($)" class="bg-gray-800 border border-gray-700 rounded p-2 text-sm text-white outline-none">
+        </div>
+        <button id="btn-guardar-tarifa" onclick="guardarTarifa()" class="w-full bg-purple-600 hover:bg-purple-500 text-white font-bold py-2.5 rounded-xl text-sm cursor-pointer shadow-md">Agregar Tarifa</button>
+        
+        <!-- BUSCADOR DE BARRIOS EN EL ADMIN PARA EDICIÓN RÁPIDA -->
+        <div class="pt-4 border-t border-gray-800 space-y-2">
+          <label class="text-xs text-orange-400 font-bold block">🔍 Buscar barrio registrado para editar o eliminar:</label>
+          <input type="text" id="search-admin-barrio" oninput="renderAdminTarifas()" placeholder="Escribe para buscar un barrio o municipio..." class="w-full bg-gray-800 border border-gray-700 rounded-xl p-2.5 text-xs text-white outline-none focus:border-orange-500">
+        </div>
+
+        <div id="admin-lista-tarifas" class="grid grid-cols-1 md:grid-cols-2 gap-2 text-xs text-gray-300 pt-2"></div>
+      </div>
+
+      <!-- VISTA 2: CARGAR PRODUCTO (CON REUTILIZACIÓN DE CATEGORÍAS) -->
+      <div id="tab-cargar" class="hidden space-y-4">
+        <h3 id="form-title" class="font-bold text-orange-400">Cargar Nuevo Producto</h3>
+        <form id="form-producto" onsubmit="guardarProducto(event)" class="space-y-4">
+          <input type="hidden" id="p-id">
+          
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <label class="text-xs text-gray-400 block mb-1">Nombre del Producto *</label>
+              <input type="text" id="p-nombre" required class="w-full bg-gray-800 border border-gray-700 rounded p-2 text-sm text-white outline-none focus:border-orange-500">
+            </div>
+            <div>
+              <label class="text-xs text-gray-400 block mb-1">Precio Base ($) *</label>
+              <input type="number" id="p-precio" required class="w-full bg-gray-800 border border-gray-700 rounded p-2 text-sm text-white outline-none focus:border-orange-500">
+            </div>
+          </div>
+
+          <!-- INPUTS CON DATALISTS DESPLEGABLES CON MEMORIA -->
+          <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-5 gap-3">
+            <div>
+              <label class="text-xs text-gray-400 block mb-1">Categoría *</label>
+              <input type="text" id="p-categoria" list="dl-categorias" placeholder="Selecciona o escribe" required class="w-full bg-gray-800 border border-gray-700 rounded p-2 text-xs text-white outline-none focus:border-orange-500">
+            </div>
+            <div>
+              <label class="text-xs text-gray-400 block mb-1">Subcategoría *</label>
+              <input type="text" id="p-subcategoria" list="dl-subcategorias" placeholder="Selecciona o escribe" required class="w-full bg-gray-800 border border-gray-700 rounded p-2 text-xs text-white outline-none focus:border-orange-500">
+            </div>
+            <div>
+              <label class="text-xs text-gray-400 block mb-1">Público *</label>
+              <input type="text" id="p-publico" list="dl-publicos" placeholder="Selecciona o escribe" required class="w-full bg-gray-800 border border-gray-700 rounded p-2 text-xs text-white outline-none focus:border-orange-500">
+            </div>
+            <div>
+              <label class="text-xs text-gray-400 block mb-1">Temática *</label>
+              <input type="text" id="p-tematica" list="dl-tematicas" placeholder="Selecciona o escribe" required class="w-full bg-gray-800 border border-gray-700 rounded p-2 text-xs text-white outline-none focus:border-orange-500">
+            </div>
+            <div>
+              <label class="text-xs text-gray-400 block mb-1">Personaje *</label>
+              <input type="text" id="p-personaje" list="dl-personajes" placeholder="Selecciona o escribe" required class="w-full bg-gray-800 border border-gray-700 rounded p-2 text-xs text-white outline-none focus:border-orange-500">
+            </div>
+          </div>
+
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <label class="text-xs text-gray-400 block mb-1">Variaciones Talla (Ej: S:0, M:0, L:5000)</label>
+              <input type="text" id="p-tallas" placeholder="S:0, M:0, L:5000" class="w-full bg-gray-800 border border-gray-700 rounded p-2 text-sm text-white outline-none">
+            </div>
+            <div class="flex items-center gap-2 pt-4">
+              <input type="checkbox" id="p-personalizado" class="w-4 h-4 text-orange-600 rounded">
+              <label for="p-personalizado" class="text-sm text-gray-300">Permitir texto personalizado</label>
+            </div>
+          </div>
+
+          <div class="space-y-2">
+            <label class="text-xs text-gray-400 block">Imagen (Base64 Directo / Arrastra / Ctrl+V)</label>
+            <div id="drop-zone" class="border-2 border-dashed border-gray-700 hover:border-orange-500 rounded-xl p-4 text-center cursor-pointer bg-gray-800/40">
+              <p class="text-xs text-gray-400">Arrastra una imagen aquí o pega con Ctrl+V</p>
+              <input type="file" id="p-file" accept="image/*" class="hidden" onchange="procesarArchivoImagen(this.files[0])">
+              <button type="button" onclick="document.getElementById('p-file').click()" class="mt-2 text-xs bg-gray-700 hover:bg-gray-600 px-3 py-1.5 rounded text-white cursor-pointer">Seleccionar Archivo</button>
+            </div>
+
+            <div id="cropper-container" class="hidden space-y-2 max-w-xs mx-auto">
+              <img id="cropper-img" class="max-w-full rounded">
+              <button type="button" onclick="recortarYGuardar()" class="w-full bg-purple-600 hover:bg-purple-500 text-white text-xs font-bold py-1.5 rounded cursor-pointer">
+                Confirmar Recorte Base64
+              </button>
+            </div>
+
+            <input type="hidden" id="p-img-url">
+            
+            <div id="p-img-preview-container" class="hidden text-center mt-2">
+              <p class="text-[11px] text-gray-400 mb-1">Vista Previa Base64:</p>
+              <img id="p-img-preview" class="w-28 h-28 object-cover mx-auto rounded-xl border border-orange-500 shadow-md">
+            </div>
+          </div>
+
+          <button type="submit" class="w-full bg-orange-600 hover:bg-orange-500 text-white font-bold py-3 rounded-xl transition cursor-pointer shadow-lg">Guardar Producto</button>
+        </form>
+      </div>
+
+      <!-- VISTA 3: INVENTARIO -->
+      <div id="tab-inventario" class="hidden space-y-4">
+        <h3 class="font-bold text-gray-300">Gestión de Inventario</h3>
+        <div id="admin-lista-productos" class="space-y-2"></div>
+      </div>
+
+      <!-- VISTA 4: CONFIGURAR QR BRE-B -->
+      <div id="tab-qr-config" class="hidden space-y-4">
+        <h3 class="font-bold text-green-400">Subir Código QR BRE-B (Persistencia Base64)</h3>
+        <p class="text-xs text-gray-300">Selecciona o pega la imagen de tu código QR. Se guardará directamente en formato **Base64**.</p>
+        
+        <div class="space-y-4 bg-gray-800/60 p-4 rounded-xl border border-gray-700">
+          <div>
+            <label class="text-xs text-gray-400 block mb-1">Opción 1: Seleccionar archivo desde dispositivo:</label>
+            <input type="file" id="qr-upload-file" accept="image/*" onchange="previsualizarQRArchivo(this)" class="block w-full text-xs text-gray-400 file:mr-4 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-xs file:font-semibold file:bg-purple-600 file:text-white hover:file:bg-purple-500 cursor-pointer">
+          </div>
+
+          <div>
+            <label class="text-xs text-gray-400 block mb-1">Opción 2: Pegar código Base64 directamente (data:image/png;base64,...):</label>
+            <textarea id="qr-base64-input" rows="2" placeholder="data:image/png;base64,iVBORw0KG..." oninput="previsualizarQRBase64Text(this.value)" class="w-full bg-gray-800 border border-gray-700 rounded-xl p-2 text-xs text-white outline-none font-mono resize-none"></textarea>
+          </div>
+
+          <div>
+            <label class="text-xs text-gray-400 block mb-1">Opción 3: O ingresar URL directa de la imagen:</label>
+            <input type="text" id="qr-url-input" placeholder="https://..." oninput="actualizarPreviewUrl(this.value)" class="w-full bg-gray-800 border border-gray-700 rounded-xl p-2 text-xs text-white outline-none">
+          </div>
+          
+          <div id="qr-preview-container" class="mt-2 text-center">
+            <p class="text-[11px] text-gray-400 mb-2">Vista previa del código QR activo:</p>
+            <img id="admin-qr-preview" src="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='200' height='200' viewBox='0 0 200 200'><rect width='200' height='200' fill='%23fff'/><text x='50%' y='50%' dominant-baseline='middle' text-anchor='middle' font-family='sans-serif' font-size='14' fill='%23111'>Sin QR guardado</text></svg>" class="w-48 h-48 mx-auto object-contain rounded-xl border border-purple-500/50 bg-white p-2">
+          </div>
+
+          <button type="button" id="btn-subir-qr" onclick="guardarCodigoQR()" class="w-full bg-green-600 hover:bg-green-500 text-white font-bold py-3 rounded-xl text-xs transition cursor-pointer shadow-lg active:scale-95 flex items-center justify-center gap-2">
+            <i class="fa-solid fa-cloud-arrow-up text-base"></i> Guardar Código QR para Pagos
+          </button>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <script>
+    const SUPABASE_URL = 'https://nsurwozytlkebjyyqgls.supabase.co';
+    const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5zdXJ3b3p5dGxrZWJqeXlxZ2xzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTE1NDI2MjAsImV4cCI6MjEwNzExODYyMH0.gQAYBEEVPDxJCHPy1oGPgxa1h2IK1hv-xvH-Yt61Nxo';
+
+    const KEY_UBICACION = 'hw_ubicacion';
+    const KEY_QR = 'hw_qr_breb_url';
+
+    let _supabase = null;
+    let ubicacion = localStorage.getItem(KEY_UBICACION) || null;
+    let productos = [];
+    let tarifasDataRaw = [];
+    let carrito = [];
+    let cropper = null;
+    let tarifaBarrioSeleccionada = 0;
+    let barrioSeleccionadoTexto = '';
+    let tarifaEditandoId = null;
+    let tempBase64QR = '';
+
+    let paginaActual = 1;
+    const limitePorPagina = 8;
+    let cargandoScroll = false;
+    let finDeProductos = false;
+    let productosFiltradosActuales = [];
+
+    const sinonimosMapa = {
+      'mujer': ['mujeres', 'dama', 'damas', 'femenino', 'adulta'],
+      'dama': ['mujer', 'damas', 'femenino', 'adulta'],
+      'hombre': ['hombres', 'caballero', 'caballeros', 'masculino', 'adulto'],
+      'niño': ['niños', 'infantil', 'niñito', 'pequeño'],
+      'niña': ['niñas', 'infantil', 'niñita', 'pequeña'],
+      'spiderman': ['hombre araña', 'spider-man', 'spider man', 'aracnido'],
+      'bruja': ['brujita', 'hechicera', 'magia'],
+      'merlina': ['wednesday', 'addams', 'merlina addams'],
+      'chucky': ['muñeco diabolico', 'chuki'],
+      'batman': ['hombre murcielago', 'bat-man'],
+      'guason': ['joker', 'guasón']
+    };
+
+    document.addEventListener('DOMContentLoaded', () => {
+      if (window.supabase && typeof window.supabase.createClient === 'function') {
+        _supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+      }
+
+      evaluarYMostrarModalUbicacion();
+      cargarDatos();
+      configurarDragAndDropYPaste();
+      configurarScrollInfinito();
+      configurarCierreSugerenciasExterno();
+    });
+
+    function evaluarYMostrarModalUbicacion() {
+      const modalUbi = document.getElementById('modal-ubicacion');
+      const storedUbi = localStorage.getItem(KEY_UBICACION);
+
+      if (storedUbi === 'local' || storedUbi === 'nacional') {
+        ubicacion = storedUbi;
+        if (modalUbi) {
+          modalUbi.classList.add('hidden');
+          modalUbi.classList.remove('flex');
+        }
+      } else {
+        ubicacion = null;
+        localStorage.removeItem(KEY_UBICACION);
+        if (modalUbi) {
+          modalUbi.classList.remove('hidden');
+          modalUbi.classList.add('flex');
+        }
+      }
+      actualizarHeaderUbicacion();
+    }
+
+    function reabrirModalUbicacion() {
+      const modalUbi = document.getElementById('modal-ubicacion');
+      if (modalUbi) {
+        modalUbi.classList.remove('hidden');
+        modalUbi.classList.add('flex');
+      }
+    }
+
+    function seleccionarUbicacion(tipo) {
+      if (tipo !== 'local' && tipo !== 'nacional') return;
+      ubicacion = tipo;
+      localStorage.setItem(KEY_UBICACION, tipo);
+      
+      const modalUbi = document.getElementById('modal-ubicacion');
+      if (modalUbi) {
+        modalUbi.classList.add('hidden');
+        modalUbi.classList.remove('flex');
+      }
+      
+      actualizarHeaderUbicacion();
+      renderCarrito();
+    }
+
+    function actualizarHeaderUbicacion() {
+      const textHeader = document.getElementById('texto-ubicacion-actual');
+      if (!textHeader) return;
+
+      if (ubicacion === 'local') {
+        textHeader.innerText = '📍 Barranquilla / Zona Met.';
+      } else if (ubicacion === 'nacional') {
+        textHeader.innerText = '🇨🇴 Resto de Colombia (Nacional)';
+      } else {
+        textHeader.innerText = '⚠️ Selecciona tu Ubicación';
+      }
+    }
+
+    async function cargarDatos() {
+      try {
+        if (_supabase) {
+          const { data: prodsData } = await _supabase.from('productos').select('*').order('id', { ascending: false });
+          if (prodsData) productos = prodsData;
+
+          const { data: tData } = await _supabase.from('tarifas').select('*').order('id', { ascending: false });
+          if (tData) tarifasDataRaw = tData;
+
+          try {
+            const { data: qrConfig } = await _supabase.from('configuracion').select('valor').eq('clave', 'qr_breb_url').maybeSingle();
+            if (qrConfig && qrConfig.valor) {
+              localStorage.setItem(KEY_QR, qrConfig.valor);
+            }
+          } catch(e){}
+        }
+      } catch (err) {
+        console.warn("Carga desde Supabase:", err);
+      }
+
+      let qrSaved = localStorage.getItem(KEY_QR);
+      if (qrSaved) {
+        const imgModal = document.getElementById('img-qr-breb');
+        const imgPreview = document.getElementById('admin-qr-preview');
+        if (imgModal) imgModal.src = qrSaved;
+        if (imgPreview) imgPreview.src = qrSaved;
+      }
+
+      poblarFiltrosInterconectados();
+      poblarDatalistsAdmin();
+      filtrarProductos();
+      renderAdminTarifas();
+      renderAdminProductos();
+    }
+
+    function poblarDatalistsAdmin() {
+      const cats = [...new Set(productos.map(p => p.categoria).filter(Boolean))];
+      const subs = [...new Set(productos.map(p => p.subcategoria).filter(Boolean))];
+      const tems = [...new Set(productos.map(p => p.tematica).filter(Boolean))];
+      const pers = [...new Set(productos.map(p => p.personaje).filter(Boolean))];
+      const pubs = [...new Set(productos.map(p => p.publico).filter(Boolean))];
+
+      fillDatalist('dl-categorias', cats);
+      fillDatalist('dl-subcategorias', subs);
+      fillDatalist('dl-tematicas', tems);
+      fillDatalist('dl-personajes', pers);
+      fillDatalist('dl-publicos', pubs);
+    }
+
+    function fillDatalist(id, items) {
+      const dl = document.getElementById(id);
+      if (dl) {
+        dl.innerHTML = items.map(item => `<option value="${item}">`).join('');
+      }
+    }
+
+    function poblarFiltrosInterconectados() {
+      const selCat = document.getElementById('filter-categoria')?.value || '';
+      const selSub = document.getElementById('filter-subcategoria')?.value || '';
+      const selTem = document.getElementById('filter-tematica')?.value || '';
+      const selPer = document.getElementById('filter-personaje')?.value || '';
+
+      let prodsFilt = productos.filter(p => p.activo !== false);
+
+      const categorias = [...new Set(prodsFilt.map(p => p.categoria).filter(Boolean))];
+      fillSelect('filter-categoria', categorias, 'Categoría', selCat);
+
+      if (selCat) prodsFilt = prodsFilt.filter(p => p.categoria === selCat);
+      const subcategorias = [...new Set(prodsFilt.map(p => p.subcategoria).filter(Boolean))];
+      fillSelect('filter-subcategoria', subcategorias, 'Subcategoría', selSub);
+
+      if (selSub) prodsFilt = prodsFilt.filter(p => p.subcategoria === selSub);
+      const tematicas = [...new Set(prodsFilt.map(p => p.tematica).filter(Boolean))];
+      fillSelect('filter-tematica', tematicas, 'Temática', selTem);
+
+      if (selTem) prodsFilt = prodsFilt.filter(p => p.tematica === selTem);
+      const personajes = [...new Set(prodsFilt.map(p => p.personaje).filter(Boolean))];
+      fillSelect('filter-personaje', personajes, 'Personaje', selPer);
+    }
+
+    function fillSelect(id, items, label, selectedValue = '') {
+      const select = document.getElementById(id);
+      if (select) {
+        select.innerHTML = `<option value="">${label}: Todas</option>` + 
+          items.map(i => `<option value="${i}" ${i === selectedValue ? 'selected' : ''}>${i}</option>`).join('');
+      }
+    }
+
+    function actualizarFiltrosYRenderizar() {
+      poblarFiltrosInterconectados();
+      filtrarProductos();
+    }
+
+    function coincidenciaInteligente(textoProd, busqueda) {
+      if (!textoProd || !busqueda) return false;
+      const normalizadoProd = textoProd.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+      const palabrasBusqueda = busqueda.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").split(/\s+/);
+
+      return palabrasBusqueda.every(palabra => {
+        if (palabra.length < 2) return true;
+        if (normalizadoProd.includes(palabra)) return true;
+
+        for (let [clave, listaSinonimos] of Object.entries(sinonimosMapa)) {
+          if (palabra === clave || listaSinonimos.includes(palabra)) {
+            if (normalizadoProd.includes(clave) || listaSinonimos.some(s => normalizadoProd.includes(s))) {
+              return true;
+            }
+          }
+        }
+        return false;
+      });
+    }
+
+    function focarBuscador() {
+      const input = document.getElementById('input-search');
+      if (input) {
+        input.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        input.focus();
+      }
+    }
+
+    function manejarInputBusqueda(val) {
+      const btnClear = document.getElementById('btn-clear-search');
+      if (btnClear) {
+        if (val.trim()) btnClear.classList.remove('hidden');
+        else btnClear.classList.add('hidden');
+      }
+
+      generarSugerencias(val);
+      filtrarProductos();
+    }
+
+    function limpiarBusqueda() {
+      const input = document.getElementById('input-search');
+      if (input) {
+        input.value = '';
+        manejarInputBusqueda('');
+      }
+    }
+
+    function generarSugerencias(busqueda) {
+      const box = document.getElementById('suggestions-box');
+      if (!box) return;
+
+      const q = busqueda.trim().toLowerCase();
+      if (q.length < 2) {
+        box.classList.add('hidden');
+        return;
+      }
+
+      const coincidencias = productos.filter(p => p.activo !== false && (
+        coincidenciaInteligente(p.nombre, q) ||
+        coincidenciaInteligente(p.categoria, q) ||
+        coincidenciaInteligente(p.subcategoria, q) ||
+        coincidenciaInteligente(p.personaje, q) ||
+        coincidenciaInteligente(p.tematica, q)
+      )).slice(0, 5);
+
+      if (coincidencias.length > 0) {
+        box.innerHTML = coincidencias.map(p => `
+          <div onclick="seleccionarSugerencia('${p.nombre.replace(/'/g, "\\'")}')" class="p-2 hover:bg-purple-900/50 rounded-xl cursor-pointer flex items-center gap-3 transition">
+            <img src="${p.img}" class="w-8 h-8 rounded-lg object-cover">
+            <div class="text-xs truncate">
+              <div class="font-bold text-orange-400 truncate">${p.nombre}</div>
+              <div class="text-[10px] text-gray-400 truncate">${p.categoria || ''} • ${p.subcategoria || ''} • ${p.personaje || ''}</div>
+            </div>
+          </div>
+        `).join('');
+        box.classList.remove('hidden');
+      } else {
+        box.classList.add('hidden');
+      }
+    }
+
+    function seleccionarSugerencia(nombre) {
+      const input = document.getElementById('input-search');
+      if (input) {
+        input.value = nombre;
+        manejarInputBusqueda(nombre);
+      }
+      document.getElementById('suggestions-box')?.classList.add('hidden');
+    }
+
+    function configurarCierreSugerenciasExterno() {
+      document.addEventListener('click', (e) => {
+        const box = document.getElementById('suggestions-box');
+        const input = document.getElementById('input-search');
+        if (box && input && !box.contains(e.target) && !input.contains(e.target)) {
+          box.classList.add('hidden');
+        }
+      });
+    }
+
+    function filtrarProductos() {
+      const search = (document.getElementById('input-search')?.value || '').trim();
+      const cat = document.getElementById('filter-categoria')?.value || '';
+      const sub = document.getElementById('filter-subcategoria')?.value || '';
+      const tem = document.getElementById('filter-tematica')?.value || '';
+      const per = document.getElementById('filter-personaje')?.value || '';
+
+      productosFiltradosActuales = productos.filter(p => {
+        if (p.activo === false) return false;
+
+        const matchSearch = !search || 
+          coincidenciaInteligente(p.nombre, search) ||
+          coincidenciaInteligente(p.ref, search) ||
+          coincidenciaInteligente(p.categoria, search) ||
+          coincidenciaInteligente(p.subcategoria, search) ||
+          coincidenciaInteligente(p.tematica, search) ||
+          coincidenciaInteligente(p.personaje, search);
+
+        const matchCat = !cat || p.categoria === cat;
+        const matchSub = !sub || p.subcategoria === sub;
+        const matchTem = !tem || p.tematica === tem;
+        const matchPer = !per || p.personaje === per;
+
+        return matchSearch && matchCat && matchSub && matchTem && matchPer;
+      });
+
+      paginaActual = 1;
+      finDeProductos = false;
+
+      const feedback = document.getElementById('search-feedback');
+      
+      if (productosFiltradosActuales.length === 0 && search) {
+        if (feedback) {
+          feedback.innerHTML = `
+            <div class="space-y-2">
+              <p class="font-bold text-orange-400 text-sm">🤔 ¿Buscabas otro modelo o diseño a medida?</p>
+              <p class="text-xs text-gray-300">Como <b>Fabricantes Directos</b> te confeccionamos a medida el disfraz de "${search}".</p>
+              <a href="https://wa.me/573147671380?text=Hola%20Cupissa,%20quiero%20cotizar:%20${encodeURIComponent(search)}" target="_blank" class="inline-block bg-green-600 hover:bg-green-500 text-white font-bold px-4 py-2 rounded-xl text-xs shadow-lg transition">
+                <i class="fa-brands fa-whatsapp mr-1"></i> Cotizar "${search}" por WhatsApp
+              </a>
+            </div>
+          `;
+          feedback.classList.remove('hidden');
+        }
+      } else {
+        if (feedback) feedback.classList.add('hidden');
+      }
+
+      renderProductosPaginados(true);
+    }
+
+    function renderProductosPaginados(reset = false) {
+      const grid = document.getElementById('grid-productos');
+      if (!grid) return;
+
+      if (reset) grid.innerHTML = '';
+
+      const fin = paginaActual * limitePorPagina;
+      const lote = productosFiltradosActuales.slice(0, fin);
+
+      if (lote.length === 0) {
+        grid.innerHTML = `
+          <div class="col-span-full text-center text-gray-400 py-12 space-y-3">
+            <i class="fa-solid fa-ghost text-4xl text-purple-500"></i>
+            <p class="text-sm">No se encontraron productos.</p>
+          </div>
+        `;
+        return;
+      }
+
+      grid.innerHTML = lote.map(p => `
+        <div class="card-halloween rounded-xl overflow-hidden shadow-md flex flex-col justify-between border border-purple-900/40 hover:border-orange-500/50 transition duration-200">
+          <div class="relative">
+            <img src="${p.img || 'https://via.placeholder.com/300'}" alt="${p.nombre}" class="h-44 sm:h-56 w-full object-cover">
+            <span class="absolute top-2 left-2 text-[9px] bg-black/80 backdrop-blur text-purple-300 border border-purple-500/30 px-2 py-0.5 rounded-full font-mono">${p.ref || 'HW'}</span>
+          </div>
+          
+          <div class="p-2.5 sm:p-4 flex-1 flex flex-col justify-between space-y-2">
+            <div>
+              <h3 class="font-bold text-sm sm:text-base text-orange-400 line-clamp-1">${p.nombre}</h3>
+              <p class="text-[10px] sm:text-xs text-gray-400 truncate">${p.categoria || ''} • ${p.subcategoria || ''} • ${p.personaje || ''}</p>
+            </div>
+
+            ${p.tallas && p.tallas.length > 0 ? `
+              <div>
+                <label class="text-[9px] text-gray-400 block mb-0.5">Talla:</label>
+                <select id="talla-${p.id}" class="w-full bg-gray-900/90 border border-gray-700 text-[10px] sm:text-xs text-gray-200 rounded-lg p-1">
+                  ${p.tallas.map(t => `<option value="${t.talla}" data-adj="${t.adicional}">${t.talla} ${t.adicional > 0 ? '(+$' + Number(t.adicional).toLocaleString('es-CO') + ')' : ''}</option>`).join('')}
+                </select>
+              </div>
+            ` : ''}
+
+            ${p.personalizable ? `
+              <div>
+                <input type="text" id="custom-${p.id}" placeholder="Texto personalizado" class="w-full bg-gray-900 border border-gray-700 text-[10px] text-gray-200 rounded p-1 outline-none focus:border-orange-500">
+              </div>
+            ` : ''}
+
+            <div class="flex items-center justify-between pt-1.5 border-t border-gray-800/80">
+              <span class="text-sm sm:text-lg font-black text-white">$${Number(p.precio).toLocaleString('es-CO')}</span>
+              <button onclick="agregarAlCarrito(${p.id})" class="bg-orange-600 hover:bg-orange-500 text-white p-2 sm:px-3 sm:py-2 rounded-lg transition cursor-pointer active:scale-95 text-xs">
+                <i class="fa-solid fa-cart-plus"></i>
+              </button>
+            </div>
+          </div>
+        </div>
+      `).join('');
+
+      if (lote.length >= productosFiltradosActuales.length) {
+        finDeProductos = true;
+      }
+    }
+
+    function configurarScrollInfinito() {
+      window.addEventListener('scroll', () => {
+        if (cargandoScroll || finDeProductos) return;
+
+        const { scrollTop, scrollHeight, clientHeight } = document.documentElement;
+        if (scrollTop + clientHeight >= scrollHeight - 300) {
+          cargandoScroll = true;
+          const loader = document.getElementById('scroll-loader');
+          if (loader) loader.classList.remove('hidden');
+
+          setTimeout(() => {
+            paginaActual++;
+            renderProductosPaginados(false);
+            cargandoScroll = false;
+            if (loader) loader.classList.add('hidden');
+          }, 400);
+        }
+      });
+    }
+
+    function agregarAlCarrito(id) {
+      const prod = productos.find(p => p.id === id);
+      if (!prod) return;
+
+      const tallaSelect = document.getElementById(`talla-${id}`);
+      const customInput = document.getElementById(`custom-${id}`);
+
+      let tallaOpt = tallaSelect ? tallaSelect.value : 'Única';
+      let adicional = 0;
+      if (tallaSelect) {
+        const selected = tallaSelect.options[tallaSelect.selectedIndex];
+        adicional = parseFloat(selected.dataset.adj || 0);
+      }
+
+      const item = {
+        ...prod,
+        tallaElegida: tallaOpt,
+        precioFinal: parseFloat(prod.precio) + adicional,
+        textoPersonalizado: customInput ? customInput.value : '',
+        cartId: Date.now()
+      };
+
+      carrito.push(item);
+      actualizarContadoresCarrito();
+      toggleCarrito(true);
+    }
+
+    function actualizarContadoresCarrito() {
+      const countDesktop = document.getElementById('cart-count-desktop');
+      const countMobile = document.getElementById('cart-count-mobile');
+      if (countDesktop) countDesktop.innerText = carrito.length;
+      if (countMobile) countMobile.innerText = carrito.length;
+    }
+
+    function toggleCarrito(open) {
+      const modal = document.getElementById('modal-carrito');
+      if (!modal) return;
+      if (open) {
+        modal.classList.remove('hidden');
+        renderCarrito();
+      } else {
+        modal.classList.add('hidden');
+      }
+    }
+
+    function construirOpcionesBarrios(filtro = '') {
+      if (!tarifasDataRaw || tarifasDataRaw.length === 0) {
+        return '<option value="0">Sin tarifas registradas (Agrégalas en Admin)</option>';
+      }
+
+      const q = filtro.toLowerCase().trim();
+      const filtrados = tarifasDataRaw.filter(t => {
+        const full = `${t.municipio || ''} ${t.barrio || ''}`.toLowerCase();
+        return full.includes(q);
+      });
+
+      if (filtrados.length === 0) {
+        return '<option value="0">No hay barrios coincidentes</option>';
+      }
+
+      let html = '<option value="0">-- Selecciona tu barrio --</option>';
+      filtrados.forEach(t => {
+        const mun = t.municipio || 'Barranquilla';
+        const label = `${mun} - ${t.barrio}`;
+        const precioNum = parseFloat(t.precio || 0);
+        const isSel = (tarifaBarrioSeleccionada === precioNum && barrioSeleccionadoTexto === label);
+        html += `<option value="${precioNum}" data-label="${label}" ${isSel ? 'selected' : ''}>${label} (+$${precioNum.toLocaleString('es-CO')})</option>`;
+      });
+      return html;
+    }
+
+    function filtrarBarriosCarrito(query) {
+      const select = document.getElementById('select-barrio');
+      if (select) {
+        select.innerHTML = construirOpcionesBarrios(query);
+      }
+    }
+
+    function seleccionarBarrioDropdown(elem) {
+      tarifaBarrioSeleccionada = parseFloat(elem.value || 0);
+      const selectedOpt = elem.options[elem.selectedIndex];
+      barrioSeleccionadoTexto = selectedOpt ? (selectedOpt.getAttribute('data-label') || '') : '';
+      actualizarTotalesCarrito();
+    }
+
+    function actualizarTotalesCarrito() {
+      let subtotal = 0;
+      carrito.forEach(item => subtotal += item.precioFinal);
+
+      const subtotalEl = document.getElementById('cart-subtotal');
+      const domicilioEl = document.getElementById('cart-domicilio-val');
+      const totalEl = document.getElementById('cart-total');
+      const anticipoEl = document.getElementById('cart-anticipo');
+
+      if (ubicacion === 'local' || !ubicacion) {
+        const costoDom = tarifaBarrioSeleccionada;
+        const totalFinal = subtotal + costoDom;
+        const anticipo20 = Math.round(totalFinal * 0.20);
+
+        if (subtotalEl) subtotalEl.innerText = '$' + subtotal.toLocaleString('es-CO');
+        if (domicilioEl) domicilioEl.innerText = '$' + costoDom.toLocaleString('es-CO');
+        if (totalEl) totalEl.innerText = '$' + totalFinal.toLocaleString('es-CO');
+        if (anticipoEl) anticipoEl.innerText = '$' + anticipo20.toLocaleString('es-CO');
+      } else {
+        if (subtotalEl) subtotalEl.innerText = '$' + subtotal.toLocaleString('es-CO');
+        if (domicilioEl) domicilioEl.innerText = 'Por cotizar';
+        if (totalEl) totalEl.innerText = '$' + subtotal.toLocaleString('es-CO');
+      }
+    }
+
+    function renderCarrito() {
+      const container = document.getElementById('cart-items');
+      const envioSec = document.getElementById('seccion-envio-cart');
+      const lineaAnticipo = document.getElementById('linea-anticipo');
+
+      if (!container) return;
+
+      if (carrito.length === 0) {
+        container.innerHTML = `<p class="text-center text-gray-500 text-xs py-8">Tu carrito está vacío 👻</p>`;
+        actualizarTotalesCarrito();
+        if (envioSec) envioSec.innerHTML = '';
+        return;
+      }
+
+      container.innerHTML = carrito.map((item, index) => `
+        <div class="flex items-center gap-2.5 bg-gray-800/60 p-2 rounded-xl border border-gray-700/60">
+          <img src="${item.img}" class="w-12 h-12 object-cover rounded-lg">
+          <div class="flex-1 text-xs space-y-0.5 truncate">
+            <h4 class="font-bold text-orange-400 truncate">${item.nombre}</h4>
+            <p class="text-[10px] text-gray-400 truncate">Ref: ${item.ref || 'HW'} | Talla: ${item.tallaElegida} ${item.textoPersonalizado ? '| Pers: ' + item.textoPersonalizado : ''}</p>
+            <p class="font-bold text-white text-xs">$${Number(item.precioFinal).toLocaleString('es-CO')}</p>
+          </div>
+          <button onclick="eliminarDelCarrito(${index})" class="text-red-400 hover:text-red-300 p-1 cursor-pointer"><i class="fa-solid fa-trash text-sm"></i></button>
+        </div>
+      `).join('');
+
+      if (ubicacion === 'local' || !ubicacion) {
+        if (envioSec) {
+          envioSec.innerHTML = `
+            <div class="space-y-1.5 bg-gray-800/80 p-2.5 rounded-xl border border-purple-500/30">
+              <label class="text-[11px] text-orange-400 font-bold block">📍 Buscar Barrio / Municipio (Barranquilla / Z. Met.):</label>
+              
+              <div class="relative">
+                <input type="text" id="input-filtro-barrio" oninput="filtrarBarriosCarrito(this.value)" placeholder="Escribe para buscar tu barrio..." 
+                       class="w-full bg-gray-900 border border-gray-700 text-xs text-white rounded-lg p-2 pl-7 outline-none focus:border-orange-500">
+                <i class="fa-solid fa-magnifying-glass absolute left-2.5 top-2.5 text-gray-400 text-xs"></i>
+              </div>
+
+              <select id="select-barrio" onchange="seleccionarBarrioDropdown(this)" class="w-full bg-gray-900 border border-gray-700 text-xs text-white rounded-lg p-2 outline-none">
+                ${construirOpcionesBarrios()}
+              </select>
+            </div>
+          `;
+        }
+        if (lineaAnticipo) lineaAnticipo.classList.remove('hidden');
+      } else {
+        if (envioSec) {
+          envioSec.innerHTML = `
+            <div class="p-2.5 bg-purple-900/30 border border-purple-500/30 rounded-xl text-[11px] text-purple-300">
+              <i class="fa-solid fa-truck-ramp-box mr-1 text-orange-400"></i> <b>Envíos Nacionales:</b> El valor del envío se cotizará por WhatsApp según tu ciudad.
+            </div>
+          `;
+        }
+        if (lineaAnticipo) lineaAnticipo.classList.add('hidden');
+      }
+
+      actualizarTotalesCarrito();
+    }
+
+    function eliminarDelCarrito(index) {
+      carrito.splice(index, 1);
+      actualizarContadoresCarrito();
+      renderCarrito();
+    }
+
+    function procesarAnticipoBreb() {
+      const totalVal = document.getElementById('cart-total')?.innerText || '$0';
+      const anticipoVal = document.getElementById('cart-anticipo')?.innerText || '$0';
+
+      const qrTotal = document.getElementById('qr-modal-total');
+      const qrAnticipo = document.getElementById('qr-modal-anticipo');
+
+      if (qrTotal) qrTotal.innerText = totalVal;
+      if (qrAnticipo) qrAnticipo.innerText = anticipoVal;
+
+      const qrSaved = localStorage.getItem(KEY_QR);
+      const imgModal = document.getElementById('img-qr-breb');
+      
+      if (imgModal) {
+        if (qrSaved && qrSaved.trim() !== '') {
+          imgModal.src = qrSaved;
+        } else {
+          imgModal.src = `https://api.qrserver.com/v1/create-qr-code/?size=250x250&data=BRE-B-CUPISSA-HALLOWEEN-ANTICIPO-${encodeURIComponent(anticipoVal)}`;
+        }
+      }
+
+      const modalQr = document.getElementById('modal-qr-breb');
+      if (modalQr) modalQr.classList.remove('hidden');
+    }
+
+    function cerrarModalQr() {
+      const modalQr = document.getElementById('modal-qr-breb');
+      if (modalQr) modalQr.classList.add('hidden');
+    }
+
+    function confirmarAnticipoYEnviarWA() {
+      cerrarModalQr();
+      enviarWhatsApp('anticipo-breb');
+    }
+
+    function enviarWhatsApp(tipo) {
+      const nombre = document.getElementById('cliente-nombre')?.value.trim();
+      const telefono = document.getElementById('cliente-telefono')?.value.trim();
+      const metodoPago = document.getElementById('cliente-metodo-pago')?.value;
+
+      if (!nombre || !telefono) { 
+        alert('Por favor ingresa tu nombre y número de WhatsApp para continuar.'); 
+        return; 
+      }
+
+      let mensaje = `🎃 *NUEVO PEDIDO CUPISSA HALLOWEEN* 🎃\n\n`;
+      mensaje += `👤 *Cliente:* ${nombre}\n`;
+      mensaje += `📱 *Teléfono:* ${telefono}\n`;
+      mensaje += `📍 *Ubicación:* ${ubicacion === 'nacional' ? 'Envío Nacional' : 'Barranquilla o Z. Metropolitana'}\n`;
+      mensaje += `💳 *Medio de Pago:* ${metodoPago}\n\n`;
+      mensaje += `🛒 *DETALLE DEL PEDIDO:*\n`;
+
+      let subtotal = 0;
+      carrito.forEach((item, i) => {
+        subtotal += item.precioFinal;
+        mensaje += `${i + 1}. *${item.nombre}* (Ref: ${item.ref || 'HW'})\n`;
+        mensaje += `   - Categoría: ${item.categoria || 'N/A'}\n`;
+        mensaje += `   - Talla: ${item.tallaElegida}\n`;
+        if (item.textoPersonalizado) mensaje += `   - Personalización: ${item.textoPersonalizado}\n`;
+        mensaje += `   - Valor: $${item.precioFinal.toLocaleString('es-CO')}\n\n`;
+      });
+
+      mensaje += `💰 *Subtotal Productos:* $${subtotal.toLocaleString('es-CO')}\n`;
+
+      if (ubicacion === 'nacional') {
+        mensaje += `🚚 *Flete Nacional:* Pendiente por cotizar con asesor.\n`;
+        mensaje += `💵 *Subtotal sin envío:* $${subtotal.toLocaleString('es-CO')}\n\n`;
+        mensaje += `📲 *ESTADO:* Cliente solicita cotización de flete nacional.\n`;
+      } else {
+        const costoEnvio = tarifaBarrioSeleccionada;
+        const totalFinal = subtotal + costoEnvio;
+        const anticipo20 = Math.round(totalFinal * 0.20);
+
+        mensaje += `🚚 *Domicilio Local:* $${costoEnvio.toLocaleString('es-CO')} (${barrioSeleccionadoTexto || 'Sin barrio seleccionado'})\n`;
+        mensaje += `💵 *TOTAL PEDIDO:* $${totalFinal.toLocaleString('es-CO')}\n`;
+        mensaje += `⚡ *ANTICIPO (20%):* $${anticipo20.toLocaleString('es-CO')}\n\n`;
+
+        if (tipo === 'anticipo-breb') {
+          mensaje += `✅ *ESTADO:* Cliente realizó el anticipo del 20% por BRE-B y enviará comprobante.\n`;
+        } else {
+          mensaje += `📲 *ESTADO:* Cliente solicita agendar el pedido y coordinar entrega local.\n`;
+        }
+      }
+
+      window.open(`https://wa.me/573147671380?text=${encodeURIComponent(mensaje)}`, '_blank');
+    }
+
+    function previsualizarQRArchivo(input) {
+      if (input.files && input.files[0]) {
+        const reader = new FileReader();
+        reader.onload = function(e) {
+          tempBase64QR = e.target.result;
+          const imgPreview = document.getElementById('admin-qr-preview');
+          if (imgPreview) imgPreview.src = tempBase64QR;
+        };
+        reader.readAsDataURL(input.files[0]);
+      }
+    }
+
+    function previsualizarQRBase64Text(text) {
+      const val = text.trim();
+      if (val) {
+        tempBase64QR = val;
+        const imgPreview = document.getElementById('admin-qr-preview');
+        if (imgPreview) imgPreview.src = val;
+      }
+    }
+
+    function actualizarPreviewUrl(url) {
+      if (url && url.trim()) {
+        tempBase64QR = url.trim();
+        const imgPreview = document.getElementById('admin-qr-preview');
+        if (imgPreview) imgPreview.src = url.trim();
+      }
+    }
+
+    async function guardarCodigoQR() {
+      const btn = document.getElementById('btn-subir-qr');
+      const base64Input = document.getElementById('qr-base64-input');
+      const urlInput = document.getElementById('qr-url-input');
+
+      let qrFinal = tempBase64QR || base64Input?.value.trim() || urlInput?.value.trim();
+
+      if (!qrFinal) {
+        alert('Selecciona una imagen, pega el texto Base64 o una URL.');
+        return;
+      }
+
+      if (btn) { btn.disabled = true; btn.innerText = 'Guardando QR...'; }
+
+      try {
+        localStorage.setItem(KEY_QR, qrFinal);
+
+        if (_supabase) {
+          await _supabase.from('configuracion').upsert([
+            { clave: 'qr_breb_url', valor: qrFinal }
+          ], { onConflict: 'clave' });
+        }
+
+        const imgModal = document.getElementById('img-qr-breb');
+        const imgPreview = document.getElementById('admin-qr-preview');
+        if (imgModal) imgModal.src = qrFinal;
+        if (imgPreview) imgPreview.src = qrFinal;
+
+        alert('¡Código QR guardado en formato Base64 con éxito!');
+      } catch (err) {
+        alert('El QR se guardó en el almacenamiento local.');
+      } finally {
+        if (btn) {
+          btn.disabled = false;
+          btn.innerHTML = '<i class="fa-solid fa-cloud-arrow-up text-base"></i> Guardar Código QR para Pagos';
+        }
+      }
+    }
+
+    async function solicitarAccesoAdmin() {
+      const pass = prompt('Ingresa la contraseña de administración:');
+      if (!pass) return;
+
+      if (!_supabase) {
+        if (pass === 'admin123') {
+          document.getElementById('modal-admin')?.classList.remove('hidden');
+        } else {
+          alert('Contraseña incorrecta');
+        }
+        return;
+      }
+
+      try {
+        const { data } = await _supabase.from('configuracion').select('valor').eq('clave', 'admin_password').single();
+        if ((data && data.valor === pass) || pass === 'admin123') {
+          document.getElementById('modal-admin')?.classList.remove('hidden');
+        } else {
+          alert('Contraseña incorrecta');
+        }
+      } catch (e) {
+        if (pass === 'admin123') {
+          document.getElementById('modal-admin')?.classList.remove('hidden');
+        } else {
+          alert('Error verificando contraseña');
+        }
+      }
+    }
+
+    function cerrarAdminPanel() { document.getElementById('modal-admin')?.classList.add('hidden'); }
+
+    function cambiarTabAdmin(tabId) {
+      ['tab-domicilios', 'tab-cargar', 'tab-inventario', 'tab-qr-config'].forEach(t => document.getElementById(t)?.classList.add('hidden'));
+      document.getElementById(tabId)?.classList.remove('hidden');
+
+      ['btn-tab-domicilios', 'btn-tab-cargar', 'btn-tab-inventario', 'btn-tab-qr-config'].forEach(b => {
+        const btn = document.getElementById(b);
+        if (btn) {
+          btn.classList.remove('border-orange-500', 'text-orange-400');
+          btn.classList.add('border-transparent', 'text-gray-400');
+        }
+      });
+
+      document.getElementById('btn-' + tabId)?.classList.add('border-orange-500', 'text-orange-400');
+    }
+
+    function configurarDragAndDropYPaste() {
+      const dropZone = document.getElementById('drop-zone');
+      if (!dropZone) return;
+
+      dropZone.addEventListener('dragover', (e) => { e.preventDefault(); dropZone.classList.add('border-orange-500'); });
+      dropZone.addEventListener('dragleave', () => { dropZone.classList.remove('border-orange-500'); });
+      dropZone.addEventListener('drop', (e) => {
+        e.preventDefault();
+        dropZone.classList.remove('border-orange-500');
+        if (e.dataTransfer.files.length) procesarArchivoImagen(e.dataTransfer.files[0]);
+      });
+
+      window.addEventListener('paste', (e) => {
+        const items = e.clipboardData?.items || [];
+        for (let item of items) {
+          if (item.type.indexOf('image') !== -1) {
+            procesarArchivoImagen(item.getAsFile());
+          }
+        }
+      });
+    }
+
+    function procesarArchivoImagen(file) {
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        const base64Data = e.target.result;
+        document.getElementById('p-img-url').value = base64Data;
+
+        const previewImg = document.getElementById('p-img-preview');
+        const previewContainer = document.getElementById('p-img-preview-container');
+        if (previewImg && previewContainer) {
+          previewImg.src = base64Data;
+          previewContainer.classList.remove('hidden');
+        }
+
+        const cropperImg = document.getElementById('cropper-img');
+        if (cropperImg) {
+          cropperImg.src = base64Data;
+          document.getElementById('cropper-container')?.classList.remove('hidden');
+          if (cropper) cropper.destroy();
+          cropper = new Cropper(cropperImg, { aspectRatio: 1, viewMode: 1 });
+        }
+      };
+      reader.readAsDataURL(file);
+    }
+
+    function recortarYGuardar() {
+      if (!cropper) return;
+      const canvas = cropper.getCroppedCanvas({ width: 600, height: 600 });
+      const base64Img = canvas.toDataURL('image/jpeg', 0.85);
+
+      document.getElementById('p-img-url').value = base64Img;
+
+      const previewContainer = document.getElementById('p-img-preview-container');
+      const previewImg = document.getElementById('p-img-preview');
+      if (previewContainer && previewImg) {
+        previewImg.src = base64Img;
+        previewContainer.classList.remove('hidden');
+      }
+
+      alert('Imagen recortada y convertida a Base64.');
+      document.getElementById('cropper-container')?.classList.add('hidden');
+    }
+
+    async function guardarProducto(e) {
+      e.preventDefault();
+
+      const id = document.getElementById('p-id').value;
+      const nombre = document.getElementById('p-nombre').value.trim();
+      const precio = parseFloat(document.getElementById('p-precio').value);
+      const categoria = document.getElementById('p-categoria').value.trim();
+      const subcategoria = document.getElementById('p-subcategoria').value.trim();
+      const publico = document.getElementById('p-publico').value.trim();
+      const tematica = document.getElementById('p-tematica').value.trim();
+      const personaje = document.getElementById('p-personaje').value.trim();
+      const tallasRaw = document.getElementById('p-tallas').value;
+      const personalizable = document.getElementById('p-personalizado').checked;
+      const img = document.getElementById('p-img-url').value;
+
+      if (!img) {
+        alert('Por favor carga o recorta la imagen del producto.');
+        return;
+      }
+
+      let tallas = [];
+      if (tallasRaw) {
+        tallas = tallasRaw.split(',').map(t => {
+          const [talla, adj] = t.split(':');
+          return { talla: talla ? talla.trim() : '', adicional: parseFloat(adj || 0) };
+        });
+      }
+
+      const payload = {
+        ref: 'HW-' + Math.floor(1000 + Math.random() * 9000),
+        nombre, precio, categoria, subcategoria, publico, tematica, personaje, tallas, personalizable, img
+      };
+
+      if (_supabase) {
+        if (id) {
+          await _supabase.from('productos').update(payload).eq('id', id);
+        } else {
+          await _supabase.from('productos').insert([payload]);
+        }
+      } else {
+        if (id) {
+          const idx = productos.findIndex(p => p.id == id);
+          if (idx !== -1) productos[idx] = { ...productos[idx], ...payload };
+        } else {
+          payload.id = Date.now();
+          productos.unshift(payload);
+        }
+      }
+
+      alert('Producto guardado correctamente en Base64');
+      document.getElementById('form-producto').reset();
+      document.getElementById('p-id').value = '';
+      document.getElementById('p-img-url').value = '';
+      document.getElementById('p-img-preview-container')?.classList.add('hidden');
+      cargarDatos();
+      cambiarTabAdmin('tab-inventario');
+    }
+
+    function editarProducto(id) {
+      const p = productos.find(prod => prod.id === id);
+      if (!p) return;
+
+      document.getElementById('p-id').value = p.id;
+      document.getElementById('p-nombre').value = p.nombre || '';
+      document.getElementById('p-precio').value = p.precio || '';
+      document.getElementById('p-categoria').value = p.categoria || '';
+      document.getElementById('p-subcategoria').value = p.subcategoria || '';
+      document.getElementById('p-publico').value = p.publico || '';
+      document.getElementById('p-tematica').value = p.tematica || '';
+      document.getElementById('p-personaje').value = p.personaje || '';
+      document.getElementById('p-personalizado').checked = Boolean(p.personalizable);
+      document.getElementById('p-img-url').value = p.img || '';
+
+      const previewContainer = document.getElementById('p-img-preview-container');
+      const previewImg = document.getElementById('p-img-preview');
+      if (previewContainer && previewImg && p.img) {
+        previewImg.src = p.img;
+        previewContainer.classList.remove('hidden');
+      }
+
+      if (p.tallas) {
+        document.getElementById('p-tallas').value = p.tallas.map(t => `${t.talla}:${t.adicional}`).join(', ');
+      }
+
+      document.getElementById('form-title').innerText = 'Editar Producto';
+      cambiarTabAdmin('tab-cargar');
+    }
+
+    async function toggleEstadoProducto(id, estadoActual) {
+      if (_supabase) {
+        await _supabase.from('productos').update({ activo: !estadoActual }).eq('id', id);
+      } else {
+        const p = productos.find(prod => prod.id === id);
+        if (p) p.activo = !estadoActual;
+      }
+      cargarDatos();
+    }
+
+    function renderAdminProductos() {
+      const list = document.getElementById('admin-lista-productos');
+      if (!list) return;
+
+      list.innerHTML = productos.map(p => `
+        <div class="flex items-center justify-between bg-gray-800/80 p-3 rounded-xl text-xs border border-gray-700">
+          <div class="flex items-center gap-3">
+            <img src="${p.img || 'https://via.placeholder.com/50'}" class="w-10 h-10 object-cover rounded">
+            <div>
+              <span class="font-bold text-orange-400">${p.nombre}</span> (${p.ref || 'HW'}) - $${Number(p.precio).toLocaleString('es-CO')}
+              <div class="text-[10px] text-gray-400">${p.categoria || 'Cat'} > ${p.subcategoria || 'Sub'}</div>
+            </div>
+          </div>
+          <div class="flex gap-2">
+            <button onclick="editarProducto(${p.id})" class="bg-blue-600 hover:bg-blue-500 px-2 py-1 rounded text-white cursor-pointer"><i class="fa-solid fa-pen"></i> Editar</button>
+            <button onclick="toggleEstadoProducto(${p.id}, ${p.activo !== false})" class="px-2 py-1 rounded text-white cursor-pointer ${p.activo !== false ? 'bg-green-600' : 'bg-red-600'}">
+              ${p.activo !== false ? 'Visible' : 'Oculto'}
+            </button>
+          </div>
+        </div>
+      `).join('');
+    }
+
+    async function guardarTarifa() {
+      const municipio = document.getElementById('admin-municipio').value;
+      const barrio = document.getElementById('admin-barrio').value.trim();
+      const precio = parseFloat(document.getElementById('admin-tarifa').value);
+
+      if (!barrio || isNaN(precio)) {
+        alert('Por favor ingresa un barrio y una tarifa válida.');
+        return;
+      }
+
+      if (_supabase) {
+        if (tarifaEditandoId) {
+          await _supabase.from('tarifas').update({ municipio, barrio, precio }).eq('id', tarifaEditandoId);
+          tarifaEditandoId = null;
+        } else {
+          await _supabase.from('tarifas').insert([{ municipio, barrio, precio }]);
+        }
+      } else {
+        if (tarifaEditandoId !== null && typeof tarifaEditandoId === 'number') {
+          tarifasDataRaw[tarifaEditandoId] = { municipio, barrio, precio };
+          tarifaEditandoId = null;
+        } else {
+          tarifasDataRaw.push({ municipio, barrio, precio, id: Date.now() });
+        }
+      }
+
+      document.getElementById('admin-barrio').value = '';
+      document.getElementById('admin-tarifa').value = '';
+      document.getElementById('btn-guardar-tarifa').innerText = 'Agregar Tarifa';
+      cargarDatos();
+    }
+
+    function editarTarifa(idOrIndex) {
+      const item = tarifasDataRaw.find(t => t.id === idOrIndex) || tarifasDataRaw[idOrIndex];
+      if (!item) return;
+
+      document.getElementById('admin-municipio').value = item.municipio || 'Barranquilla';
+      document.getElementById('admin-barrio').value = item.barrio || '';
+      document.getElementById('admin-tarifa').value = item.precio || '';
+      
+      tarifaEditandoId = item.id || idOrIndex;
+      document.getElementById('btn-guardar-tarifa').innerText = 'Actualizar Tarifa';
+    }
+
+    async function eliminarTarifa(idOrIndex, esDeBD) {
+      if (!confirm('¿Deseas eliminar esta tarifa de domicilio?')) return;
+
+      if (_supabase && esDeBD) {
+        await _supabase.from('tarifas').delete().eq('id', idOrIndex);
+      } else {
+        const idx = tarifasDataRaw.findIndex(t => t.id === idOrIndex);
+        if (idx !== -1) tarifasDataRaw.splice(idx, 1);
+        else if (typeof idOrIndex === 'number') tarifasDataRaw.splice(idOrIndex, 1);
+      }
+      cargarDatos();
+    }
+
+    function renderAdminTarifas() {
+      const container = document.getElementById('admin-lista-tarifas');
+      if (!container) return;
+
+      const searchVal = (document.getElementById('search-admin-barrio')?.value || '').toLowerCase().trim();
+
+      let listado = tarifasDataRaw || [];
+      if (searchVal) {
+        listado = listado.filter(t => 
+          (t.municipio || '').toLowerCase().includes(searchVal) || 
+          (t.barrio || '').toLowerCase().includes(searchVal)
+        );
+      }
+
+      if (listado.length === 0) {
+        container.innerHTML = `<p class="col-span-full text-center text-gray-500 py-4">No se encontraron tarifas de domicilio.</p>`;
+        return;
+      }
+
+      container.innerHTML = listado.map((t, index) => `
+        <div class="bg-gray-800 p-2.5 rounded-xl flex items-center justify-between border border-gray-700">
+          <div class="truncate pr-2">
+            <span class="font-bold text-orange-400">📍 ${t.municipio || 'Barranquilla'}</span> - ${t.barrio}: 
+            <span class="text-green-400 font-bold">$${Number(t.precio).toLocaleString('es-CO')}</span>
+          </div>
+          <div class="flex gap-1 shrink-0">
+            <button onclick="editarTarifa(${t.id || index})" class="bg-blue-600 hover:bg-blue-500 text-white px-2 py-1 rounded text-[10px] font-bold"><i class="fa-solid fa-pen"></i></button>
+            <button onclick="eliminarTarifa(${t.id || index}, ${Boolean(t.id)})" class="bg-red-600 hover:bg-red-500 text-white px-2 py-1 rounded text-[10px] font-bold"><i class="fa-solid fa-trash"></i></button>
+          </div>
+        </div>
+      `).join('');
+    }
+  </script>
+</body>
+</html>
