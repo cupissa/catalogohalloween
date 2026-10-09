@@ -74,6 +74,15 @@
     </div>
   </div>
 
+  <!-- MODAL VISOR DE FOTO COMPLETA (ZOOM) -->
+  <div id="modal-foto-zoom" class="fixed inset-0 bg-black/90 z-[99990] hidden flex items-center justify-center p-4 backdrop-blur-md cursor-pointer" onclick="cerrarModalFoto()">
+    <div class="relative max-w-3xl w-full max-h-[90vh] flex flex-col items-center justify-center" onclick="event.stopPropagation()">
+      <button onclick="cerrarModalFoto()" class="absolute -top-10 right-0 text-white text-3xl font-bold hover:text-orange-400 cursor-pointer">&times;</button>
+      <img id="img-zoom-target" src="" class="max-h-[80vh] w-auto max-w-full object-contain rounded-2xl border-2 border-orange-500/60 shadow-2xl">
+      <p id="title-zoom-target" class="text-orange-400 text-base font-bold mt-3 text-center"></p>
+    </div>
+  </div>
+
   <!-- Header Fijo -->
   <header class="bg-black/90 backdrop-blur border-b border-orange-500/30 sticky top-0 z-40 shadow-lg">
     
@@ -229,7 +238,7 @@
     </div>
   </footer>
 
-  <!-- DRAWER CARRITO - ESTRUCTURA FIJA CON BOTONES GARANTIZADOS -->
+  <!-- DRAWER CARRITO -->
   <div id="modal-carrito" class="fixed inset-0 bg-black/80 z-[10000] hidden flex justify-end">
     <div class="bg-gray-900 w-full max-w-md h-full p-4 sm:p-5 flex flex-col justify-between overflow-hidden shadow-2xl border-l border-purple-500/30">
       
@@ -246,7 +255,7 @@
       <!-- LISTA DE PRODUCTOS SCROLLABLE -->
       <div id="cart-items" class="flex-1 overflow-y-auto my-3 space-y-3 pr-1"></div>
 
-      <!-- SECCIÓN DE DETALLES Y CHECKOUT FIJA EN LA PARTE INFERIOR -->
+      <!-- SECCIÓN DE DETALLES Y CHECKOUT FIJA -->
       <div class="border-t border-gray-800 pt-3 space-y-3 shrink-0 bg-gray-900">
         
         <!-- Selector de Domicilio -->
@@ -288,7 +297,7 @@
           </div>
         </div>
 
-        <!-- BOTONES INAMOVIBLES HARDCODED -->
+        <!-- BOTONES CHECKOUT -->
         <div id="opciones-checkout" class="space-y-2 pt-1">
           <button type="button" onclick="procesarAnticipoBreb()" class="w-full bg-gradient-to-r from-purple-700 to-purple-600 hover:from-purple-600 hover:to-purple-500 text-white font-bold py-3 rounded-xl text-xs transition cursor-pointer shadow-lg active:scale-95 flex items-center justify-center gap-2">
             <i class="fa-solid fa-qrcode text-base"></i> Pagar 20% Anticipo con BRE-B
@@ -329,7 +338,7 @@
     </div>
   </div>
 
-  <!-- DATALISTS PARA GUARDAR Y REUTILIZAR CATEGORÍAS EN EL ADMIN -->
+  <!-- DATALISTS PARA REUTILIZAR CATEGORÍAS -->
   <datalist id="dl-categorias"></datalist>
   <datalist id="dl-subcategorias"></datalist>
   <datalist id="dl-tematicas"></datalist>
@@ -351,7 +360,7 @@
         <button onclick="cambiarTabAdmin('tab-qr-config')" id="btn-tab-qr-config" class="py-2 px-4 font-bold border-b-2 border-transparent text-gray-400 hover:text-white text-sm whitespace-nowrap">4. Configurar QR BRE-B</button>
       </div>
 
-      <!-- VISTA 1: DOMICILIOS CON BUSCADOR EN ADMIN -->
+      <!-- VISTA 1: DOMICILIOS -->
       <div id="tab-domicilios" class="space-y-4">
         <h3 class="font-bold text-purple-400">Tarifas de Domicilio por Ciudad/Municipio y Barrio</h3>
         
@@ -368,7 +377,6 @@
         </div>
         <button id="btn-guardar-tarifa" onclick="guardarTarifa()" class="w-full bg-purple-600 hover:bg-purple-500 text-white font-bold py-2.5 rounded-xl text-sm cursor-pointer shadow-md">Agregar Tarifa</button>
         
-        <!-- BUSCADOR DE BARRIOS EN EL ADMIN PARA EDICIÓN RÁPIDA -->
         <div class="pt-4 border-t border-gray-800 space-y-2">
           <label class="text-xs text-orange-400 font-bold block">🔍 Buscar barrio registrado para editar o eliminar:</label>
           <input type="text" id="search-admin-barrio" oninput="renderAdminTarifas()" placeholder="Escribe para buscar un barrio o municipio..." class="w-full bg-gray-800 border border-gray-700 rounded-xl p-2.5 text-xs text-white outline-none focus:border-orange-500">
@@ -377,7 +385,7 @@
         <div id="admin-lista-tarifas" class="grid grid-cols-1 md:grid-cols-2 gap-2 text-xs text-gray-300 pt-2"></div>
       </div>
 
-      <!-- VISTA 2: CARGAR PRODUCTO (CON REUTILIZACIÓN DE CATEGORÍAS) -->
+      <!-- VISTA 2: CARGAR PRODUCTO (RECORTE LIBRE) -->
       <div id="tab-cargar" class="hidden space-y-4">
         <h3 id="form-title" class="font-bold text-orange-400">Cargar Nuevo Producto</h3>
         <form id="form-producto" onsubmit="guardarProducto(event)" class="space-y-4">
@@ -394,7 +402,6 @@
             </div>
           </div>
 
-          <!-- INPUTS CON DATALISTS DESPLEGABLES CON MEMORIA -->
           <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-5 gap-3">
             <div>
               <label class="text-xs text-gray-400 block mb-1">Categoría *</label>
@@ -430,25 +437,27 @@
           </div>
 
           <div class="space-y-2">
-            <label class="text-xs text-gray-400 block">Imagen (Base64 Directo / Arrastra / Ctrl+V)</label>
+            <label class="text-xs text-gray-400 block">Imagen (Cuerpo Completo / Recorte Libre / Base64 / Ctrl+V)</label>
             <div id="drop-zone" class="border-2 border-dashed border-gray-700 hover:border-orange-500 rounded-xl p-4 text-center cursor-pointer bg-gray-800/40">
               <p class="text-xs text-gray-400">Arrastra una imagen aquí o pega con Ctrl+V</p>
               <input type="file" id="p-file" accept="image/*" class="hidden" onchange="procesarArchivoImagen(this.files[0])">
               <button type="button" onclick="document.getElementById('p-file').click()" class="mt-2 text-xs bg-gray-700 hover:bg-gray-600 px-3 py-1.5 rounded text-white cursor-pointer">Seleccionar Archivo</button>
             </div>
 
-            <div id="cropper-container" class="hidden space-y-2 max-w-xs mx-auto">
-              <img id="cropper-img" class="max-w-full rounded">
-              <button type="button" onclick="recortarYGuardar()" class="w-full bg-purple-600 hover:bg-purple-500 text-white text-xs font-bold py-1.5 rounded cursor-pointer">
-                Confirmar Recorte Base64
+            <div id="cropper-container" class="hidden space-y-2 max-w-sm mx-auto">
+              <div class="max-h-[350px] overflow-hidden rounded">
+                <img id="cropper-img" class="max-w-full">
+              </div>
+              <button type="button" onclick="recortarYGuardar()" class="w-full bg-purple-600 hover:bg-purple-500 text-white text-xs font-bold py-2 rounded cursor-pointer shadow-md">
+                ✂️ Confirmar Recorte Libre
               </button>
             </div>
 
             <input type="hidden" id="p-img-url">
             
             <div id="p-img-preview-container" class="hidden text-center mt-2">
-              <p class="text-[11px] text-gray-400 mb-1">Vista Previa Base64:</p>
-              <img id="p-img-preview" class="w-28 h-28 object-cover mx-auto rounded-xl border border-orange-500 shadow-md">
+              <p class="text-[11px] text-gray-400 mb-1">Vista Previa:</p>
+              <img id="p-img-preview" class="max-h-48 w-auto mx-auto rounded-xl border border-orange-500 shadow-md object-contain">
             </div>
           </div>
 
@@ -465,7 +474,7 @@
       <!-- VISTA 4: CONFIGURAR QR BRE-B -->
       <div id="tab-qr-config" class="hidden space-y-4">
         <h3 class="font-bold text-green-400">Subir Código QR BRE-B (Persistencia Base64)</h3>
-        <p class="text-xs text-gray-300">Selecciona o pega la imagen de tu código QR. Se guardará en Supabase y localmente en formato **Base64**.</p>
+        <p class="text-xs text-gray-300">Selecciona o pega la imagen de tu código QR.</p>
         
         <div class="space-y-4 bg-gray-800/60 p-4 rounded-xl border border-gray-700">
           <div>
@@ -474,12 +483,12 @@
           </div>
 
           <div>
-            <label class="text-xs text-gray-400 block mb-1">Opción 2: Pegar código Base64 directamente (data:image/png;base64,...):</label>
+            <label class="text-xs text-gray-400 block mb-1">Opción 2: Pegar código Base64 directamente:</label>
             <textarea id="qr-base64-input" rows="2" placeholder="data:image/png;base64,iVBORw0KG..." oninput="previsualizarQRBase64Text(this.value)" class="w-full bg-gray-800 border border-gray-700 rounded-xl p-2 text-xs text-white outline-none font-mono resize-none"></textarea>
           </div>
 
           <div>
-            <label class="text-xs text-gray-400 block mb-1">Opción 3: O ingresar URL directa de la imagen:</label>
+            <label class="text-xs text-gray-400 block mb-1">Opción 3: O ingresar URL directa:</label>
             <input type="text" id="qr-url-input" placeholder="https://..." oninput="actualizarPreviewUrl(this.value)" class="w-full bg-gray-800 border border-gray-700 rounded-xl p-2 text-xs text-white outline-none">
           </div>
           
@@ -546,6 +555,42 @@
       configurarScrollInfinito();
       configurarCierreSugerenciasExterno();
     });
+
+    function abrirModalFoto(imgUrl, nombre) {
+      const modal = document.getElementById('modal-foto-zoom');
+      const imgTarget = document.getElementById('img-zoom-target');
+      const titleTarget = document.getElementById('title-zoom-target');
+      
+      if (modal && imgTarget) {
+        imgTarget.src = imgUrl;
+        if (titleTarget) titleTarget.innerText = nombre || '';
+        modal.classList.remove('hidden');
+        modal.classList.add('flex');
+      }
+    }
+
+    function cerrarModalFoto() {
+      const modal = document.getElementById('modal-foto-zoom');
+      if (modal) {
+        modal.classList.add('hidden');
+        modal.classList.remove('flex');
+      }
+    }
+
+    function cambiarPrecioPorTalla(productId) {
+      const prod = productos.find(p => p.id === productId);
+      if (!prod) return;
+
+      const select = document.getElementById(`talla-${productId}`);
+      const priceDisplay = document.getElementById(`price-display-${productId}`);
+
+      if (select && priceDisplay) {
+        const selectedOpt = select.options[select.selectedIndex];
+        const adicional = parseFloat(selectedOpt.dataset.adj || 0);
+        const precioTotal = parseFloat(prod.precio) + adicional;
+        priceDisplay.innerText = '$' + Number(precioTotal).toLocaleString('es-CO');
+      }
+    }
 
     function evaluarYMostrarModalUbicacion() {
       const modalUbi = document.getElementById('modal-ubicacion');
@@ -871,9 +916,12 @@
 
       grid.innerHTML = lote.map(p => `
         <div class="card-halloween rounded-xl overflow-hidden shadow-md flex flex-col justify-between border border-purple-900/40 hover:border-orange-500/50 transition duration-200">
-          <div class="relative">
-            <img src="${p.img || 'https://via.placeholder.com/300'}" alt="${p.nombre}" class="h-44 sm:h-56 w-full object-cover">
+          <div class="relative cursor-pointer group" onclick="abrirModalFoto('${p.img || 'https://via.placeholder.com/300'}', '${p.nombre.replace(/'/g, "\\'")}')">
+            <img src="${p.img || 'https://via.placeholder.com/300'}" alt="${p.nombre}" class="h-52 sm:h-72 w-full object-cover group-hover:scale-105 transition duration-300">
             <span class="absolute top-2 left-2 text-[9px] bg-black/80 backdrop-blur text-purple-300 border border-purple-500/30 px-2 py-0.5 rounded-full font-mono">${p.ref || 'HW'}</span>
+            <span class="absolute bottom-2 right-2 text-[10px] bg-black/70 text-orange-400 px-2 py-1 rounded-lg border border-orange-500/40 opacity-90 group-hover:opacity-100 transition">
+              <i class="fa-solid fa-expand"></i> Ver foto
+            </span>
           </div>
           
           <div class="p-2.5 sm:p-4 flex-1 flex flex-col justify-between space-y-2">
@@ -885,7 +933,7 @@
             ${p.tallas && p.tallas.length > 0 ? `
               <div>
                 <label class="text-[9px] text-gray-400 block mb-0.5">Talla:</label>
-                <select id="talla-${p.id}" class="w-full bg-gray-900/90 border border-gray-700 text-[10px] sm:text-xs text-gray-200 rounded-lg p-1">
+                <select id="talla-${p.id}" onchange="cambiarPrecioPorTalla(${p.id})" class="w-full bg-gray-900/90 border border-gray-700 text-[10px] sm:text-xs text-gray-200 rounded-lg p-1 outline-none focus:border-orange-500">
                   ${p.tallas.map(t => `<option value="${t.talla}" data-adj="${t.adicional}">${t.talla} ${t.adicional > 0 ? '(+$' + Number(t.adicional).toLocaleString('es-CO') + ')' : ''}</option>`).join('')}
                 </select>
               </div>
@@ -898,7 +946,7 @@
             ` : ''}
 
             <div class="flex items-center justify-between pt-1.5 border-t border-gray-800/80">
-              <span class="text-sm sm:text-lg font-black text-white">$${Number(p.precio).toLocaleString('es-CO')}</span>
+              <span id="price-display-${p.id}" class="text-sm sm:text-lg font-black text-white">$${Number(p.precio).toLocaleString('es-CO')}</span>
               <button onclick="agregarAlCarrito(${p.id})" class="bg-orange-600 hover:bg-orange-500 text-white p-2 sm:px-3 sm:py-2 rounded-lg transition cursor-pointer active:scale-95 text-xs">
                 <i class="fa-solid fa-cart-plus"></i>
               </button>
@@ -1091,7 +1139,7 @@
         if (envioSec) {
           envioSec.innerHTML = `
             <div class="p-2.5 bg-purple-900/30 border border-purple-500/30 rounded-xl text-[11px] text-purple-300">
-              <i class="fa-solid fa-truck-ramp-box mr-1 text-orange-400"></i> <b>Envíos Nacionales:</b> El valor del envío se cotizará por WhatsApp según tu ciudad.
+              <i class="fa-solid fa-truck-ramp-box mr-1 text-orange-400"></i> <b>Envíos Nacionales:</b> El valor del envío se cotización por WhatsApp según tu ciudad.
             </div>
           `;
         }
@@ -1352,7 +1400,14 @@
           cropperImg.src = base64Data;
           document.getElementById('cropper-container')?.classList.remove('hidden');
           if (cropper) cropper.destroy();
-          cropper = new Cropper(cropperImg, { aspectRatio: 1, viewMode: 1 });
+          
+          // CONFIGURACIÓN PARA RECORTE LIBRE (CUERPO COMPLETO / SIN RESTRICCIÓN DE PROPORCIÓN)
+          cropper = new Cropper(cropperImg, { 
+            aspectRatio: NaN, 
+            viewMode: 0,
+            autoCropArea: 0.95,
+            responsive: true
+          });
         }
       };
       reader.readAsDataURL(file);
@@ -1360,7 +1415,8 @@
 
     function recortarYGuardar() {
       if (!cropper) return;
-      const canvas = cropper.getCroppedCanvas({ width: 600, height: 600 });
+      // Permite obtener el lienzo según las proporciones recortadas libremente
+      const canvas = cropper.getCroppedCanvas({ maxWidth: 1000, maxHeight: 1200 });
       const base64Img = canvas.toDataURL('image/jpeg', 0.85);
 
       document.getElementById('p-img-url').value = base64Img;
@@ -1372,7 +1428,7 @@
         previewContainer.classList.remove('hidden');
       }
 
-      alert('Imagen recortada y convertida a Base64.');
+      alert('Imagen de cuerpo completo recortada correctamente.');
       document.getElementById('cropper-container')?.classList.add('hidden');
     }
 
@@ -1404,7 +1460,6 @@
         });
       }
 
-      // Preservar la referencia existente en edición o generar una nueva automática
       const prodExistente = id ? productos.find(p => p.id == id) : null;
       const ref = prodExistente?.ref || ('HW-' + Math.floor(1000 + Math.random() * 9000));
 
@@ -1435,7 +1490,7 @@
 
         if (error) {
           console.error("Error guardando producto en Supabase:", error);
-          alert("Error al guardar en Supabase: " + error.message + "\n\nRecuerda ejecutar la sentencia SQL para agregar las columnas faltantes (categoria, subcategoria) en la tabla productos.");
+          alert("Error al guardar en Supabase: " + error.message);
           return;
         }
       } else {
