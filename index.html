@@ -3,7 +3,11 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>Cupissa Halloween</title>
+  <title>Cupissa Halloween - Disfraces a Medida y de Temporada</title>
+  
+  <!-- SEO Meta Tags para Google -->
+  <meta name="description" content="Encuentra los mejores disfraces para Damas, Niñas, Niños y toda la familia en Cupissa Halloween. Fabricantes directos con envíos locales y nacionales.">
+  <meta name="keywords" content="disfraces halloween, disfraces barranquilla, disfraces damas, disfraces niñas, disfraces personalizados">
   
   <!-- Favicon Emoji Calabaza -->
   <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🎃</text></svg>">
@@ -19,13 +23,13 @@
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.css"/>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.js"></script>
 
-<!-- Open Graph Meta Tags para WhatsApp y Facebook -->
-<meta property="og:type" content="website">
-<meta property="og:title" content="Cupissa Halloween - Catalogo de Disfraces">
-<meta property="og:description" content="Encuentra disfraces a medida para toda la familia. ¡Fabricantes directos con envios locales y nacionales!">
-<meta property="og:image" content="https://images.unsplash.com/photo-1508361001413-7a9dca21d08a?auto=format&fit=crop&w=1200&h=630&q=80">
-<meta property="og:image:width" content="1200">
-<meta property="og:image:height" content="630">
+  <!-- Open Graph Meta Tags para WhatsApp y Facebook -->
+  <meta property="og:type" content="website">
+  <meta property="og:title" content="Cupissa Halloween - Catalogo de Disfraces">
+  <meta property="og:description" content="Encuentra disfraces a medida para damas, niñas, niños y toda la familia. ¡Fabricantes directos!">
+  <meta property="og:image" content="https://images.unsplash.com/photo-1508361001413-7a9dca21d08a?auto=format&fit=crop&w=1200&h=630&q=80">
+  <meta property="og:image:width" content="1200">
+  <meta property="og:image:height" content="630">
   
   <style>
     body {
@@ -63,12 +67,12 @@
   <div class="fixed top-8 right-12 w-24 h-24 bg-gradient-to-br from-amber-100 to-amber-200 rounded-full shadow-[0_0_50px_rgba(251,191,36,0.4)] pointer-events-none z-0"></div>
   <div class="fixed top-20 left-0 text-4xl text-purple-900/40 pointer-events-none z-0 animate-witch">🧹 🎃</div>
 
-  <!-- MODAL UBICACIÓN INICIAL OBLIGATORIO E INAMOVIBLE -->
+  <!-- MODAL 1: UBICACIÓN INICIAL -->
   <div id="modal-ubicacion" class="fixed inset-0 bg-black/95 z-[99999] flex items-center justify-center p-4 backdrop-blur-md">
-    <div class="card-halloween p-6 rounded-2xl max-w-md w-full border-2 border-orange-500 text-center shadow-2xl relative z-10">
-      <i class="fa-solid fa-ghost text-5xl text-orange-500 mb-4 animate-bounce"></i>
-      <h2 class="text-2xl font-bold text-orange-400 mb-2">¡Bienvenido a Cupissa Halloween! 🎃</h2>
-      <p class="text-sm text-gray-300 mb-6">Para calcular la tarifa de domicilio exacta o cotizar tu envío, por favor selecciona tu ubicación:</p>
+    <div class="card-halloween p-6 rounded-2xl max-w-md w-full border-2 border-orange-500 text-center shadow-2xl relative z-10 space-y-4">
+      <i class="fa-solid fa-ghost text-5xl text-orange-500 animate-bounce"></i>
+      <h2 class="text-2xl font-bold text-orange-400">¡Bienvenido a Cupissa Halloween! 🎃</h2>
+      <p class="text-sm text-gray-300">Para calcular la tarifa de domicilio exacta o cotizar tu envío, por favor selecciona tu ubicación:</p>
       
       <div class="space-y-3">
         <button type="button" onclick="seleccionarUbicacion('local')" class="w-full py-3.5 bg-orange-600 hover:bg-orange-500 text-white font-bold rounded-xl transition cursor-pointer shadow-lg active:scale-95 text-sm flex items-center justify-center gap-2">
@@ -78,7 +82,32 @@
           <span>🇨🇴</span> Resto de Colombia (Envíos Nacionales)
         </button>
       </div>
-      <p class="text-[11px] text-gray-400 mt-4">* Barranquilla, Soledad, Puerto Colombia, Galapa y Malambo aplican tarifa local con opción de domicilio y anticipo.</p>
+      <p class="text-[11px] text-gray-400">* Barranquilla, Soledad, Puerto Colombia, Galapa y Malambo aplican tarifa local con opción de domicilio y anticipo.</p>
+    </div>
+  </div>
+
+  <!-- MODAL 2: MODAL DE PÚBLICO (DAMAS / NIÑAS / NIÑOS / TODOS) -->
+  <div id="modal-publico" class="fixed inset-0 bg-black/95 z-[99998] hidden items-center justify-center p-4 backdrop-blur-md">
+    <div class="card-halloween p-6 rounded-2xl max-w-md w-full border-2 border-purple-500 text-center shadow-2xl relative z-10 space-y-4">
+      <i class="fa-solid fa-hat-wizard text-5xl text-purple-400 animate-pulse"></i>
+      <h2 class="text-2xl font-bold text-orange-400">¿Qué disfraces buscas hoy? ✨</h2>
+      <p class="text-sm text-gray-300">Selecciona para filtrar tu catálogo al instante:</p>
+      
+      <div class="grid grid-cols-2 gap-3 pt-2">
+        <button type="button" onclick="filtrarPorPublicoModal('Damas')" class="py-3 px-4 bg-purple-900/85 hover:bg-purple-800 border border-purple-500/50 text-white font-bold rounded-xl transition cursor-pointer shadow-lg active:scale-95 text-xs flex flex-col items-center gap-1">
+          <span class="text-xl">💃</span> <span>Damas</span>
+        </button>
+        <button type="button" onclick="filtrarPorPublicoModal('Niñas')" class="py-3 px-4 bg-pink-950/85 hover:bg-pink-900 border border-pink-500/50 text-white font-bold rounded-xl transition cursor-pointer shadow-lg active:scale-95 text-xs flex flex-col items-center gap-1">
+          <span class="text-xl">👑</span> <span>Niñas</span>
+        </button>
+        <button type="button" onclick="filtrarPorPublicoModal('Niños')" class="py-3 px-4 bg-blue-950/85 hover:bg-blue-900 border border-blue-500/50 text-white font-bold rounded-xl transition cursor-pointer shadow-lg active:scale-95 text-xs flex flex-col items-center gap-1">
+          <span class="text-xl">🦸‍♂️</span> <span>Niños</span>
+        </button>
+        <button type="button" onclick="filtrarPorPublicoModal('')" class="py-3 px-4 bg-orange-950/85 hover:bg-orange-900 border border-orange-500/50 text-white font-bold rounded-xl transition cursor-pointer shadow-lg active:scale-95 text-xs flex flex-col items-center gap-1">
+          <span class="text-xl">🎃</span> <span>Todos (Ver Catálogo)</span>
+        </button>
+      </div>
+      <p class="text-[11px] text-gray-400 mt-2">Podrás cambiar este filtro en cualquier momento desde la barra superior.</p>
     </div>
   </div>
 
@@ -138,7 +167,7 @@
 
     </div>
 
-    <!-- AVISO FABRICANTES (Optimizado para lectura fluida en móviles) -->
+    <!-- AVISO FABRICANTES -->
     <div class="bg-gradient-to-r from-purple-950 via-black to-orange-950 border-t border-orange-500/20 py-2 px-3 sm:px-4">
       <div class="max-w-7xl mx-auto flex flex-wrap items-center justify-between gap-2 text-xs">
         <div class="flex items-center gap-1.5 flex-1 min-w-[200px]">
@@ -153,31 +182,31 @@
     </div>
   </header>
 
-  <!-- Filtros Interconectados Dinámicos (Incluye Público "¿Para quién?") -->
+  <!-- Filtros Interconectados Dinámicos -->
   <section class="max-w-7xl mx-auto px-3 py-3 w-full">
     <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-2">
       <div>
-        <select id="filter-publico" onchange="actualizarFiltrosYRenderizar()" class="w-full bg-gray-900/90 border border-gray-700/80 rounded-xl p-2 text-xs text-gray-200 focus:border-orange-500 outline-none truncate">
+        <select id="filter-publico" onchange="actualizarFiltrosYRenderizar(true)" class="w-full bg-gray-900/90 border border-gray-700/80 rounded-xl p-2 text-xs text-gray-200 focus:border-orange-500 outline-none truncate">
           <option value="">¿Para quién?: Todos</option>
         </select>
       </div>
       <div>
-        <select id="filter-categoria" onchange="actualizarFiltrosYRenderizar()" class="w-full bg-gray-900/90 border border-gray-700/80 rounded-xl p-2 text-xs text-gray-200 focus:border-orange-500 outline-none truncate">
+        <select id="filter-categoria" onchange="actualizarFiltrosYRenderizar(true)" class="w-full bg-gray-900/90 border border-gray-700/80 rounded-xl p-2 text-xs text-gray-200 focus:border-orange-500 outline-none truncate">
           <option value="">Categoría: Todas</option>
         </select>
       </div>
       <div>
-        <select id="filter-subcategoria" onchange="actualizarFiltrosYRenderizar()" class="w-full bg-gray-900/90 border border-gray-700/80 rounded-xl p-2 text-xs text-gray-200 focus:border-orange-500 outline-none truncate">
+        <select id="filter-subcategoria" onchange="actualizarFiltrosYRenderizar(true)" class="w-full bg-gray-900/90 border border-gray-700/80 rounded-xl p-2 text-xs text-gray-200 focus:border-orange-500 outline-none truncate">
           <option value="">Subcategoría: Todas</option>
         </select>
       </div>
       <div>
-        <select id="filter-tematica" onchange="actualizarFiltrosYRenderizar()" class="w-full bg-gray-900/90 border border-gray-700/80 rounded-xl p-2 text-xs text-gray-200 focus:border-orange-500 outline-none truncate">
+        <select id="filter-tematica" onchange="actualizarFiltrosYRenderizar(true)" class="w-full bg-gray-900/90 border border-gray-700/80 rounded-xl p-2 text-xs text-gray-200 focus:border-orange-500 outline-none truncate">
           <option value="">Temática: Todas</option>
         </select>
       </div>
       <div>
-        <select id="filter-personaje" onchange="actualizarFiltrosYRenderizar()" class="w-full bg-gray-900/90 border border-gray-700/80 rounded-xl p-2 text-xs text-gray-200 focus:border-orange-500 outline-none truncate">
+        <select id="filter-personaje" onchange="actualizarFiltrosYRenderizar(true)" class="w-full bg-gray-900/90 border border-gray-700/80 rounded-xl p-2 text-xs text-gray-200 focus:border-orange-500 outline-none truncate">
           <option value="">Personaje: Todos</option>
         </select>
       </div>
@@ -425,8 +454,8 @@
               <input type="text" id="p-subcategoria" list="dl-subcategorias" placeholder="Selecciona o escribe" required class="w-full bg-gray-800 border border-gray-700 rounded p-2 text-xs text-white outline-none focus:border-orange-500">
             </div>
             <div>
-              <label class="text-xs text-gray-400 block mb-1">Público *</label>
-              <input type="text" id="p-publico" list="dl-publicos" placeholder="Selecciona o escribe" required class="w-full bg-gray-800 border border-gray-700 rounded p-2 text-xs text-white outline-none focus:border-orange-500">
+              <label class="text-xs text-gray-400 block mb-1">Público (Damas, Niñas, Niños) *</label>
+              <input type="text" id="p-publico" list="dl-publicos" placeholder="Damas / Niñas / Niños" required class="w-full bg-gray-800 border border-gray-700 rounded p-2 text-xs text-white outline-none focus:border-orange-500">
             </div>
             <div>
               <label class="text-xs text-gray-400 block mb-1">Temática *</label>
@@ -478,7 +507,7 @@
         </form>
       </div>
 
-      <!-- VISTA 3: INVENTARIO (CON BUSCADOR INTEGRADO) -->
+      <!-- VISTA 3: INVENTARIO -->
       <div id="tab-inventario" class="hidden space-y-4">
         <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2">
           <h3 class="font-bold text-gray-300">Gestión de Inventario</h3>
@@ -535,6 +564,7 @@
 
     let _supabase = null;
     let ubicacion = localStorage.getItem(KEY_UBICACION) || null;
+    let publicoSeleccionadoInicial = sessionStorage.getItem('hw_publico_filtro') || '';
     let productos = [];
     let tarifasDataRaw = [];
     let carrito = [];
@@ -571,7 +601,7 @@
         _supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
       }
 
-      evaluarYMostrarModalUbicacion();
+      evaluarYMostrarModalesInicio();
       cargarDatos();
       configurarDragAndDropYPaste();
       configurarScrollInfinito();
@@ -579,7 +609,6 @@
       verificarRutaAdmin();
     });
 
-    // MANEJO DE RUTA Y PERSISTENCIA /ADMIN EN URL
     function verificarRutaAdmin() {
       const currentPath = window.location.pathname.toLowerCase();
       const currentSearch = window.location.search.toLowerCase();
@@ -639,8 +668,9 @@
       }
     }
 
-    function evaluarYMostrarModalUbicacion() {
+    function evaluarYMostrarModalesInicio() {
       const modalUbi = document.getElementById('modal-ubicacion');
+      const modalPub = document.getElementById('modal-publico');
       const storedUbi = localStorage.getItem(KEY_UBICACION);
 
       if (storedUbi === 'local' || storedUbi === 'nacional') {
@@ -648,6 +678,12 @@
         if (modalUbi) {
           modalUbi.classList.add('hidden');
           modalUbi.classList.remove('flex');
+        }
+        if (!sessionStorage.getItem('hw_publico_seleccionado')) {
+          if (modalPub) {
+            modalPub.classList.remove('hidden');
+            modalPub.classList.add('flex');
+          }
         }
       } else {
         ubicacion = null;
@@ -681,6 +717,30 @@
       
       actualizarHeaderUbicacion();
       renderCarrito();
+
+      const modalPub = document.getElementById('modal-publico');
+      if (modalPub && !sessionStorage.getItem('hw_publico_seleccionado')) {
+        modalPub.classList.remove('hidden');
+        modalPub.classList.add('flex');
+      }
+    }
+
+    function filtrarPorPublicoModal(valorPublico) {
+      sessionStorage.setItem('hw_publico_seleccionado', 'true');
+      sessionStorage.setItem('hw_publico_filtro', valorPublico);
+      publicoSeleccionadoInicial = valorPublico;
+
+      const modalPub = document.getElementById('modal-publico');
+      if (modalPub) {
+        modalPub.classList.add('hidden');
+        modalPub.classList.remove('flex');
+      }
+
+      const selectPub = document.getElementById('filter-publico');
+      if (selectPub) {
+        selectPub.value = valorPublico;
+      }
+      actualizarFiltrosYRenderizar(false);
     }
 
     function actualizarHeaderUbicacion() {
@@ -699,7 +759,7 @@
     async function cargarDatos() {
       try {
         if (_supabase) {
-          const { data: prodsData, error: pErr } = await _supabase.from('productos').select('*').order('id', { ascending: false });
+          const { data: prodsData, error: pErr } = await _supabase.from('productos').select('*');
           if (pErr) console.error("Error al obtener productos:", pErr);
           if (prodsData) productos = prodsData;
 
@@ -727,6 +787,13 @@
       }
 
       poblarFiltrosInterconectados();
+      
+      // Aplicar filtro inicial si el usuario seleccionó una opción en el modal
+      if (publicoSeleccionadoInicial) {
+        const selectPub = document.getElementById('filter-publico');
+        if (selectPub) selectPub.value = publicoSeleccionadoInicial;
+      }
+
       poblarDatalistsAdmin();
       filtrarProductos();
       renderAdminTarifas();
@@ -755,7 +822,7 @@
     }
 
     function poblarFiltrosInterconectados() {
-      const selPub = document.getElementById('filter-publico')?.value || '';
+      const selPub = document.getElementById('filter-publico')?.value || publicoSeleccionadoInicial || '';
       const selCat = document.getElementById('filter-categoria')?.value || '';
       const selSub = document.getElementById('filter-subcategoria')?.value || '';
       const selTem = document.getElementById('filter-tematica')?.value || '';
@@ -766,7 +833,9 @@
       const publicos = [...new Set(prodsFilt.map(p => p.publico).filter(Boolean))];
       fillSelect('filter-publico', publicos, '¿Para quién?', selPub);
 
-      if (selPub) prodsFilt = prodsFilt.filter(p => p.publico === selPub);
+      if (selPub) {
+        prodsFilt = prodsFilt.filter(p => p.publico && p.publico.toLowerCase() === selPub.toLowerCase());
+      }
       const categorias = [...new Set(prodsFilt.map(p => p.categoria).filter(Boolean))];
       fillSelect('filter-categoria', categorias, 'Categoría', selCat);
 
@@ -787,11 +856,15 @@
       const select = document.getElementById(id);
       if (select) {
         select.innerHTML = `<option value="">${label}: Todos</option>` + 
-          items.map(i => `<option value="${i}" ${i === selectedValue ? 'selected' : ''}>${i}</option>`).join('');
+          items.map(i => `<option value="${i}" ${i.toLowerCase() === selectedValue.toLowerCase() ? 'selected' : ''}>${i}</option>`).join('');
       }
     }
 
-    function actualizarFiltrosYRenderizar() {
+    function actualizarFiltrosYRenderizar(manual = false) {
+      if (manual) {
+        publicoSeleccionadoInicial = '';
+        sessionStorage.removeItem('hw_publico_filtro');
+      }
       poblarFiltrosInterconectados();
       filtrarProductos();
     }
@@ -909,13 +982,13 @@
 
     function filtrarProductos() {
       const search = (document.getElementById('input-search')?.value || '').trim();
-      const pub = document.getElementById('filter-publico')?.value || '';
+      const pub = document.getElementById('filter-publico')?.value || publicoSeleccionadoInicial || '';
       const cat = document.getElementById('filter-categoria')?.value || '';
       const sub = document.getElementById('filter-subcategoria')?.value || '';
       const tem = document.getElementById('filter-tematica')?.value || '';
       const per = document.getElementById('filter-personaje')?.value || '';
 
-      productosFiltradosActuales = productos.filter(p => {
+      let filtrados = productos.filter(p => {
         if (p.activo === false) return false;
 
         const matchSearch = !search || 
@@ -927,7 +1000,7 @@
           coincidenciaInteligente(p.tematica, search) ||
           coincidenciaInteligente(p.personaje, search);
 
-        const matchPub = !pub || p.publico === pub;
+        const matchPub = !pub || (p.publico && p.publico.toLowerCase() === pub.toLowerCase());
         const matchCat = !cat || p.categoria === cat;
         const matchSub = !sub || p.subcategoria === sub;
         const matchTem = !tem || p.tematica === tem;
@@ -936,6 +1009,13 @@
         return matchSearch && matchPub && matchCat && matchSub && matchTem && matchPer;
       });
 
+      // ORDEN ALEATORIO (FISHER-YATES SHUFFLE) CADA VEZ QUE SE CARGA O FILTRA
+      for (let i = filtrados.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [filtrados[i], filtrados[j]] = [filtrados[j], filtrados[i]];
+      }
+
+      productosFiltradosActuales = filtrados;
       paginaActual = 1;
       finDeProductos = false;
 
@@ -974,7 +1054,7 @@
         grid.innerHTML = `
           <div class="col-span-full text-center text-gray-400 py-12 space-y-3">
             <i class="fa-solid fa-ghost text-4xl text-purple-500"></i>
-            <p class="text-sm">No se encontraron productos.</p>
+            <p class="text-sm">No se encontraron productos con estos filtros.</p>
           </div>
         `;
         return;
@@ -1487,7 +1567,6 @@
           document.getElementById('cropper-container')?.classList.remove('hidden');
           if (cropper) cropper.destroy();
           
-          // CONFIGURACIÓN PARA RECORTE LIBRE (CUERPO COMPLETO / SIN RESTRICCIÓN DE PROPORCIÓN)
           cropper = new Cropper(cropperImg, { 
             aspectRatio: NaN, 
             viewMode: 0,
@@ -1501,7 +1580,6 @@
 
     function recortarYGuardar() {
       if (!cropper) return;
-      // Permite obtener el lienzo según las proporciones recortadas libremente
       const canvas = cropper.getCroppedCanvas({ maxWidth: 1000, maxHeight: 1200 });
       const base64Img = canvas.toDataURL('image/jpeg', 0.85);
 
